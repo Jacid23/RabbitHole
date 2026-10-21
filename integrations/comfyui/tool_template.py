@@ -1,7 +1,7 @@
 """
 title: Fixed ComfyUI workflow
 author: Local workflow tools
-version: 1.1.0
+version: 1.2.0
 description: Runs one administrator-defined ComfyUI workflow.
 """
 import asyncio
@@ -165,8 +165,17 @@ class Tools:
             raise RuntimeError("Workflow produced more than 64 images; recover outputs from ComfyUI rather than resubmitting")
         await self._emit(emitter,"Saving full-resolution images to Open WebUI",job_id=prompt_id)
         saved = [await self._store(client,item,request,user,prompt_id) for item in images]
+        if emitter:
+            # Attach to the assistant message independently of the model's prose.
+            # Open WebUI persists the files event for saved chats and displays it
+            # immediately in temporary chats as well.
+            await emitter({"type":"files","data":{"files":[{"type":"image", **item} for item in saved]}})
         await self._emit(emitter,"Images ready",100,job_id=prompt_id,done=True)
-        return json.dumps({"workflow":RECIPE["name"],"prompt_id":prompt_id,"images":saved}) + "\n" + "\n".join(f"![Generated image]({item['url']})" for item in saved)
+        result = {"workflow":RECIPE["name"],"prompt_id":prompt_id,"images":saved}
+        if emitter:
+            result["message"] = "The images are already attached and visible in chat. Acknowledge completion; do not invent a different URL or repeat the image prompt."
+            return json.dumps(result)
+        return json.dumps(result) + "\n" + "\n".join(f"![Generated image]({item['url']})" for item in saved)
 
     async def _watch(self, client, prompt_id, request, user, emitter, ws=None, started=None):
         started = started or time.monotonic()

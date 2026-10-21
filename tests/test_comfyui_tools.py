@@ -98,6 +98,19 @@ async def test_error_is_not_published():
     tool._store.assert_not_called()
 
 
+async def test_images_attach_without_relying_on_model_markdown():
+    _, tool, _ = load()
+    saved = {'url':'/api/v1/files/own/content','filename':'own.png'}
+    tool._store = AsyncMock(return_value=saved)
+    emitter = AsyncMock()
+    result = await tool._finish(None,entry(),'own',object(),{'id':'owner'},emitter)
+    attachments = [call.args[0] for call in emitter.await_args_list if call.args[0]['type']=='files']
+    assert attachments == [{'type':'files','data':{'files':[{'type':'image',**saved}]}}]
+    assert json.loads(result)['images']==[saved]
+    assert 'already attached' in json.loads(result)['message']
+    assert '![' not in result
+
+
 async def test_resume_checks_ownership_and_never_submits(monkeypatch):
     _, tool, _ = load()
     async def get(self,url,**kwargs):
