@@ -1,0 +1,205 @@
+{
+  "id": "comfy_krea_square",
+  "name": "ComfyUI Krea Square",
+  "description": "Generate with the administrator Krea workflow, square by default. Use for general image requests and any requested ratio. Supports approved aspect ratios, 1K/2K long-edge resolution, 1-50 steps and the approved LoRA pool.",
+  "workflow": {
+    "29": {
+      "inputs": {
+        "filename_prefix": "OpenWebUI/comfy_krea_square",
+        "images": [
+          "54",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "Save Image"
+      }
+    },
+    "49": {
+      "inputs": {
+        "aspect_ratio": "1:1 (Square)",
+        "megapixels": 1,
+        "multiple": 8
+      },
+      "class_type": "ResolutionSelector",
+      "_meta": {
+        "title": "Resolution Selector"
+      }
+    },
+    "51": {
+      "inputs": {
+        "text": "A tiny robot tending a greenhouse.",
+        "clip": [
+          "72",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
+    },
+    "52": {
+      "inputs": {
+        "width": [
+          "49",
+          0
+        ],
+        "height": [
+          "49",
+          1
+        ],
+        "batch_size": 1
+      },
+      "class_type": "EmptyLatentImage",
+      "_meta": {
+        "title": "Empty Latent Image"
+      }
+    },
+    "53": {
+      "inputs": {
+        "seed": 1,
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": [
+          "73",
+          0
+        ],
+        "positive": [
+          "51",
+          0
+        ],
+        "negative": [
+          "58",
+          0
+        ],
+        "latent_image": [
+          "52",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "54": {
+      "inputs": {
+        "samples": [
+          "53",
+          0
+        ],
+        "vae": [
+          "71",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "58": {
+      "inputs": {
+        "conditioning": [
+          "51",
+          0
+        ]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": {
+        "title": "Conditioning Zero Out"
+      }
+    },
+    "71": {
+      "inputs": {
+        "vae_name": "your-vae.safetensors",
+        "device": "cuda:1"
+      },
+      "class_type": "VAELoaderMultiGPU",
+      "_meta": {
+        "title": "VAELoaderMultiGPU"
+      }
+    },
+    "72": {
+      "inputs": {
+        "clip_name": "your-text-encoder.safetensors",
+        "type": "krea2",
+        "device": "cuda:1"
+      },
+      "class_type": "CLIPLoaderMultiGPU",
+      "_meta": {
+        "title": "CLIPLoaderMultiGPU"
+      }
+    },
+    "73": {
+      "inputs": {
+        "unet_name": "your-diffusion-model.safetensors",
+        "weight_dtype": "default",
+        "device": "cuda:1"
+      },
+      "class_type": "UNETLoaderMultiGPU",
+      "_meta": {
+        "title": "UNETLoaderMultiGPU"
+      }
+    }
+  },
+  "prompt_inputs": [
+    {
+      "node": "51",
+      "key": "text"
+    }
+  ],
+  "seed_inputs": [
+    {
+      "node": "53",
+      "key": "seed"
+    }
+  ],
+  "image_inputs": [],
+  "output_nodes": [
+    "29"
+  ],
+  "options": {
+    "size": {
+      "node": "52",
+      "width_key": "width",
+      "height_key": "height",
+      "ratios": [
+        "1:1",
+        "2:3",
+        "3:2",
+        "3:4",
+        "4:3",
+        "9:16",
+        "16:9",
+        "21:9"
+      ],
+      "resolutions": {
+        "1K": 1024,
+        "2K": 2048
+      },
+      "default_ratio": "1:1",
+      "default_resolution": "1K",
+      "multiple": 8
+    },
+    "steps": {
+      "node": "53",
+      "key": "steps",
+      "min": 1,
+      "max": 50
+    },
+    "loras": {
+      "target": {
+        "node": "53",
+        "key": "model"
+      },
+      "max_count": 3,
+      "entries": []
+    }
+  }
+}

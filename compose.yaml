@@ -1,0 +1,34 @@
+services:
+  rabbit-hole:
+    build: .
+    image: rabbit-hole:local
+    container_name: rabbit-hole
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5030:5030"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      STUDIO_OPENWEBUI: ${OPENWEBUI_URL:-http://host.docker.internal:3000}
+      STUDIO_OPENWEBUI_PUBLIC: ${OPENWEBUI_PUBLIC_URL:-http://localhost:3000}
+      STUDIO_COMFYUI: ${COMFYUI_URL:-http://host.docker.internal:8188}
+      STUDIO_DATA: /app/data
+      STUDIO_SECURE_COOKIE: "${SECURE_COOKIE:-0}"
+      STUDIO_PREVIEW: "0"
+    volumes:
+      - ./web/family-studio/dist:/app/web/family-studio/dist:ro
+      - ./data:/app/data
+      - ./workflows:/app/integrations/comfyui/workflows
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5030/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

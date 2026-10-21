@@ -1,0 +1,7 @@
+# Wonderland artwork
+
+Created with the built-in imagegen tool. Original size: 1536×1024. Delivery: `web/family-studio/public/assets/wonderland/portal.webp` (same dimensions, WebP quality 88). The Basement logo is the original supplied artwork, unchanged.
+
+## Generation prompt
+
+Create one premium original illustrated hero artwork for Rabbit Hole, a phone-first imagination and learning app themed around Alice in Wonderland and psychedelic surrealism. NO TEXT, NO LETTERING, NO LOGOS, NO UI. Landscape composition around 3:2. A small white rabbit seen from behind stands on a flowing black-and-ivory checkerboard path that curls through an enormous ornate glowing keyhole doorway, into an impossible lush nocturnal garden. Bioluminescent oversized mushrooms, violet ferns, electric lime tendrils, floating blank playing cards and an antique pocket watch bend around the portal in a graceful spiral. The rabbit is tiny, landscape and portal majestic. Rich intricate hand-painted editorial fantasy, engraved storybook detail meets liquid psychedelic poster art, sophisticated and slightly mysterious, inviting rather than frightening. Saturated ultraviolet, plum, hot coral accents and acid-lime light, deep near-black ink shadows. A gorgeous luminous focal point. Compose the rabbit, path and portal near center-right; edges fade naturally into deep aubergine darkness so it can blend into an app. No Disney likenesses, no recognizable film characters, no drugs or drug paraphernalia, no extra text. This is a finished artwork asset, not an interface mockup.

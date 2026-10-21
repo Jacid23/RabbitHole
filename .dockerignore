@@ -1,0 +1,5 @@
+data
+workflows
+*.tar.gz
+**/__pycache__
+**/*.pyc

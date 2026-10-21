@@ -1,0 +1,330 @@
+[data-theme="mars"] {
+  --world-bg: #0e1420;
+  --world-panel: #1b2530;
+  --world-glow: #9b4e302c;
+  --world-accent: #f0ad7c;
+  --world-line: #d77b494a;
+  --world-soft: #d0b5a8;
+  --accent: #efaf83;
+}
+[data-theme="estate"] {
+  --world-bg: #171311;
+  --world-panel: #28201c;
+  --world-glow: #9b77332c;
+  --world-accent: #ebcb8a;
+  --world-line: #d8b47a4a;
+  --world-soft: #cbbba5;
+  --accent: #edcc8b;
+}
+[data-theme="cartoon"] {
+  --world-bg: #20172e;
+  --world-panel: #302442;
+  --world-glow: #c476d92c;
+  --world-accent: #ffe080;
+  --world-line: #dfb0ff66;
+  --world-soft: #dec5ed;
+  --accent: #ffe080;
+}
+.app-shell[data-theme]:not([data-theme="custom"]) {
+  background:
+    radial-gradient(ellipse at 80% 0, var(--world-glow), transparent 60%),
+    var(--world-bg);
+}
+.app-shell[data-theme]:not([data-theme="custom"]) .sidebar {
+  background: linear-gradient(165deg, var(--world-panel), var(--world-bg));
+  border-color: var(--world-line);
+}
+.app-shell[data-theme]:not([data-theme="custom"]) .studio-surface {
+  background: transparent;
+}
+.app-shell[data-theme]:not([data-theme="custom"])
+  :is(
+    .topbar,
+    .chat-compose,
+    .image-prompt,
+    .settings-panel,
+    .wonder-hero,
+    .view-top
+  ) {
+  border-color: var(--world-line);
+}
+.app-shell[data-theme]:not([data-theme="custom"])
+  :is(
+    .chat-compose,
+    .image-prompt,
+    .settings-panel,
+    .wonder-hero,
+    .wonder-path
+  ) {
+  background: var(--world-panel);
+}
+.app-shell[data-theme]:not([data-theme="custom"])
+  :is(
+    .eyebrow,
+    .breadcrumb,
+    .wonder-copy > p,
+    .wonder-chapter,
+    .wonder-path small,
+    .control-hint,
+    .compose-note
+  ) {
+  color: var(--world-soft);
+}
+.app-shell[data-theme]:not([data-theme="custom"])
+  :is(
+    .wonder-copy h1 em,
+    .wonder-signpost,
+    .hole-switch,
+    .nav-item.active,
+    .control-heading,
+    .text-button
+  ) {
+  color: var(--world-accent);
+}
+.app-shell[data-theme]:not([data-theme="custom"])
+  :is(.primary, .send-button, .new-chat) {
+  background: var(--world-accent);
+  color: #201b21;
+}
+.app-shell[data-theme]:not([data-theme="custom"]) .nav-item.active {
+  background: var(--world-glow);
+  border-color: var(--world-accent);
+}
+.app-shell[data-theme]:not([data-theme="custom"]) .wonder-portal::after {
+  background: linear-gradient(90deg, var(--world-panel), transparent 30%);
+}
+.world-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+[data-theme="estate"] .wonder-copy h1 {
+  font-style: italic;
+}
+[data-theme="estate"] :is(.chat-compose, .image-prompt, .settings-panel) {
+  box-shadow: inset 0 0 0 4px #d6b67d08;
+}
+[data-theme="mars"] .studio-surface {
+  background-image: radial-gradient(
+    #f3d4bb22 0.7px,
+    transparent 0.7px
+  ) !important;
+  background-size: 37px 37px !important;
+}
+[data-theme="cartoon"] .studio-surface {
+  background-image: radial-gradient(
+    #f5d5ff14 1.5px,
+    transparent 1.5px
+  ) !important;
+  background-size: 14px 14px !important;
+}
+[data-theme="cartoon"]
+  :is(
+    .wonder-hero,
+    .wonder-path,
+    .chat-compose,
+    .image-prompt,
+    .settings-panel
+  ) {
+  border-width: 2px;
+  box-shadow: 5px 5px 0 #100b17;
+}
+[data-theme="cartoon"] .wonder-copy h1 {
+  font-family: "Trebuchet MS", sans-serif;
+  font-weight: 900;
+  letter-spacing: -2px;
+  text-shadow: 3px 3px 0 #100b17;
+}
+.hole-door[data-theme="mars"] {
+  background: linear-gradient(150deg, #743d2d, #122236);
+  border-color: #ed9a6f77;
+}
+.hole-door[data-theme="estate"] {
+  background: linear-gradient(150deg, #55452c, #1d1716);
+  border-color: #e7c78277;
+}
+.hole-door[data-theme="cartoon"] {
+  background: linear-gradient(150deg, #65427e, #203f50);
+  border: 2px solid #f0c8ff;
+  box-shadow: 4px 4px 0 #100b17;
+}
+.random-hole {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 0 0 18px;
+  border: 1px dashed #d8f4ab99;
+  border-radius: 16px;
+  background: #acdc7412;
+  color: #e5f9c6;
+  text-align: left;
+  font-size: 17px;
+}
+.random-hole span {
+  margin-left: auto;
+  font-size: 12px;
+  color: #c3b3d2;
+}
+.view-mode {
+  padding: 8px 12px;
+  white-space: nowrap;
+  border: 1px solid #c8b5dd44;
+  border-radius: 9px;
+  background: #21192c;
+  color: #d9c8e9;
+  font-size: 11px;
+}
+.view-mode.active {
+  background: #d9f99c;
+  color: #23321a;
+}
+.people-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 25px 40px 20px;
+}
+.people-page h1 {
+  font:
+    38px Georgia,
+    serif;
+  margin: 0;
+}
+.people-page > p {
+  color: #c2add2;
+  font-size: 13px;
+}
+.people-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 24px;
+  min-height: 0;
+  flex: 1;
+}
+.people-users button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 13px;
+  border-radius: 10px;
+  background: transparent;
+  color: #ded2e9;
+}
+.people-users button[aria-pressed="true"] {
+  background: #9c71c72b;
+  border: 1px solid #c8a4e466;
+}
+.people-users small {
+  display: block;
+  color: #b6a4c8;
+  margin-top: 4px;
+}
+.people-editor {
+  padding: 20px;
+  background: #1d1528;
+  border: 1px solid #a47ac333;
+  border-radius: 16px;
+}
+.people-editor label {
+  display: block;
+  font-size: 13px;
+  color: #d1bcdf;
+  margin-bottom: 18px;
+}
+.people-editor input,
+.people-editor select,
+.people-editor textarea {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px;
+  background: #130e1d;
+  border: 1px solid #a47ac344;
+  border-radius: 8px;
+  color: #f0e8fa;
+}
+.profile-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 680px), (max-width: 1024px) and (max-height: 500px) {
+  .view-mode {
+    font-size: 10px;
+    padding: 7px;
+  }
+  .topbar-right {
+    gap: 7px;
+  }
+  .people-page {
+    padding: 14px 17px;
+  }
+  .people-page h1 {
+    font-size: 28px;
+  }
+  .people-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+  .people-users {
+    display: flex;
+    overflow-x: auto;
+  }
+  .people-users button {
+    min-width: 110px;
+  }
+  .people-editor {
+    padding: 15px;
+  }
+  .random-hole {
+    font-size: 15px;
+  }
+  .random-hole span {
+    display: none;
+  }
+}
+
+.world-preview-shell {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: 56px minmax(0, 1fr);
+  width: min(1100px, 95vw) !important;
+  height: min(780px, 92dvh) !important;
+  border: 1px solid #bf9cdb66;
+  border-radius: 22px;
+  overflow: hidden;
+}
+.world-preview-shell .topbar {
+  justify-content: space-between;
+  font-size: 13px;
+}
+.world-preview-shell .studio-surface {
+  min-height: 0;
+  overflow: hidden;
+}
+.world-preview-shell .chat-page {
+  height: 100%;
+  min-height: 0;
+}
+.world-preview-shell .wonder-path {
+  pointer-events: none;
+}
+.world-preview-shell .wonder-path:focus {
+  outline: 2px solid var(--accent);
+}
+
+.app-shell[data-theme]:not([data-theme="custom"]) { --surface:var(--world-panel); --line:var(--world-line); --muted:var(--world-soft); }
+.app-shell[data-theme]:not([data-theme="custom"]) :is(.topbar,.mobile-dock) { background:var(--world-bg); border-color:var(--world-line); }
+.app-shell[data-theme]:not([data-theme="custom"]) .mobile-dock button { color:var(--world-soft); }
+.app-shell[data-theme]:not([data-theme="custom"]) .mobile-dock button.active { color:var(--world-accent); background:var(--world-glow); }
+.app-shell[data-theme]:not([data-theme="custom"]) :is(.view-mode,.secondary,.page-tag,.image-detail,.people-editor) { background:var(--world-panel); border-color:var(--world-line); }
+.app-shell[data-theme]:not([data-theme="custom"]) :is(input,select,textarea) { border-color:var(--world-line); }
+.app-shell[data-theme="mars"] .wonder-copy h1 { font-family:"Bahnschrift","Segoe UI",sans-serif; font-weight:650; letter-spacing:-1.7px; }
+.app-shell[data-theme="mars"] .wonder-copy h1 em { font-style:normal; }
