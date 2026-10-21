@@ -1,0 +1,277 @@
+.public-signin {
+  height: var(--app-height, 100dvh);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  padding: 28px 24px;
+  background: #111113;
+  color: #eeeef0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+.public-signin-brand {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+}
+.public-signin-card {
+  width: min(340px, 100%);
+}
+.public-signin-card h1 {
+  font:
+    500 26px/1.2 "Segoe UI",
+    system-ui,
+    sans-serif;
+  letter-spacing: -0.7px;
+  margin: 0 0 9px;
+}
+.public-signin-card > p {
+  font-size: 14px;
+  color: #a0a0a6;
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+.public-signin-card label {
+  display: block;
+  font-size: 13px;
+  color: #cacacf;
+  margin: 0 0 19px;
+}
+.public-signin-card input {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin-top: 9px;
+  padding: 10px 12px;
+  background: #1b1b1e;
+  color: #f4f4f6;
+  border: 1px solid #3b3b41;
+  border-radius: 7px;
+  font:
+    16px "Segoe UI",
+    system-ui,
+    sans-serif;
+}
+.public-signin-card button {
+  width: 100%;
+  height: 46px;
+  margin-top: 5px;
+  background: #eeeeef;
+  color: #151517;
+  border: 1px solid #eeeeef;
+  border-radius: 7px;
+  font:
+    600 14px "Segoe UI",
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.public-signin-card button:hover {
+  background: #fff;
+}
+.public-signin-card button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.public-signin-card :is(input, button):focus-visible {
+  outline: 2px solid #e1e1e7;
+  outline-offset: 4px;
+}
+.public-signin-error {
+  font-size: 13px !important;
+  line-height: 1.5;
+  color: #ffb4b4 !important;
+  margin: 0 0 16px !important;
+}
+.login-descent {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #100e15;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.fall-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 50% 43%,
+    #6e6677 0,
+    #39323f 25%,
+    #17131f 55%,
+    #0b0a0e 85%
+  );
+}
+.fall-light {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: min(78vw, 650px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 150px 50px #b7a6c414,
+    inset 0 0 90px #c6b4db33;
+}
+.fall-well {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: min(62vw, 480px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    #030205 0 35%,
+    #100c18 50%,
+    #706078 70%,
+    #b0a0b445 72%,
+    transparent 74%
+  );
+  box-shadow: inset 0 0 70px 20px #030205;
+}
+.fall-well i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #c5b5d544;
+  border-radius: 50%;
+  animation: well-depth 2.5s linear infinite;
+}
+.fall-well i:nth-child(2) {
+  animation-delay: -0.625s;
+}
+.fall-well i:nth-child(3) {
+  animation-delay: -1.25s;
+}
+.fall-well i:nth-child(4) {
+  animation-delay: -1.875s;
+}
+.falling-shadow {
+  position: absolute;
+  width: clamp(130px, 19vw, 185px);
+  height: auto;
+  left: 50%;
+  top: 43%;
+  fill: #010103;
+  stroke: #b7a7c0;
+  stroke-width: .8px;
+  filter: drop-shadow(0 0 10px #b3a5d166);
+  transform-origin: 50% 45%;
+  animation: shadow-fall 3.8s cubic-bezier(0.25, 0.12, 0.55, 0.95) infinite;
+}
+.fall-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse,
+    transparent 18%,
+    #09080d80 65%,
+    #09080d 100%
+  );
+  pointer-events: none;
+}
+.fall-caption {
+  position: absolute;
+  bottom: max(9dvh, 30px);
+  left: 24px;
+  right: 24px;
+  text-align: center;
+  color: #eee9f4;
+}
+.fall-caption p {
+  font:
+    400 clamp(23px, 4vw, 31px) Georgia,
+    serif;
+  margin: 0 0 11px;
+}
+.fall-caption span {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #b1a7bc;
+}
+@keyframes shadow-fall {
+  0% {
+    transform: translate(-70%, -120%) rotate(-30deg) scale(1.15);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-44%, -37%) rotate(25deg) scale(0.68);
+  }
+  100% {
+    transform: translate(-50%, -10%) rotate(100deg) scale(0.03);
+    opacity: 0;
+  }
+}
+@keyframes well-depth {
+  0% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(0.12);
+    opacity: 0;
+  }
+}
+@media (max-height: 500px) {
+  .public-signin {
+    flex-direction: row;
+    gap: 55px;
+    padding: 20px 32px;
+  }
+  .public-signin-card {
+    max-width: 320px;
+  }
+  .public-signin-card > p {
+    margin-bottom: 16px;
+  }
+  .public-signin-card label {
+    margin-bottom: 13px;
+  }
+  .fall-well {
+    width: min(45vh, 260px);
+  }
+  .falling-shadow {
+    width: 90px;
+  }
+  .fall-caption {
+    bottom: 20px;
+  }
+  .fall-caption p {
+    font-size: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .falling-shadow {
+    animation: none;
+    transform: translate(-50%, -50%) rotate(15deg) scale(0.8);
+    opacity: 1;
+  }
+  .fall-well i {
+    animation: none;
+    transform: scale(0.65);
+  }
+  .fall-well i:nth-child(2) {
+    transform: scale(0.4);
+  }
+  .fall-well i:nth-child(3) {
+    transform: scale(0.2);
+  }
+  .fall-well i:nth-child(4) {
+    display: none;
+  }
+}

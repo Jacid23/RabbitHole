@@ -8,22 +8,18 @@ import { AdminView } from "./AdminView";
 import { Signin } from "./Signin";
 import { Icon } from "./Icons";
 import { MobileNav } from "./MobileNav";
-import { RabbitLoading } from "./RabbitLoading";
 import { HolePicker } from "./HolePicker";
 import { ProfileAdmin } from "./ProfileAdmin";
 import { useMobileViewport } from "./useMobileViewport";
-import type { Bootstrap, ImageItem, Page, Workflow } from "./types";
+import type { Bootstrap, Page } from "./types";
 import "./style.css";
 import "./wonderland.css";
 import "./app-layout.css";
 import "./world-themes.css";
+import "./signin.css";
 export function App() {
   useMobileViewport();
   const [data, setData] = useState<Bootstrap | null>(null),
-    [preview, setPreview] = useState<{
-      images: ImageItem[];
-      workflows: Workflow[];
-    }>({ images: [], workflows: [] }),
     [page, setPage] = useState<Page>("chat"),
     [holeId, setHoleId] = useState(""),
     [pickingHole, setPickingHole] = useState(false),
@@ -32,16 +28,22 @@ export function App() {
     [chatReset, setChatReset] = useState(0),
     [initialPrompt, setInitialPrompt] = useState(""),
     [initialWorkflow, setInitialWorkflow] = useState(""),
-    [login, setLogin] = useState(false),
     [menu, setMenu] = useState(false),
     [health, setHealth] = useState<{ online: boolean; checked: number } | null>(
       null,
     ),
     [loading, setLoading] = useState(true),
     [modeError, setModeError] = useState("");
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (notBefore = 0) => {
     try {
-      const value = await api<Bootstrap>("/api/bootstrap");
+      const [value] = await Promise.all([
+        api<Bootstrap>("/api/bootstrap"),
+        new Promise<void>((resolve) => {
+          const remaining = notBefore - Date.now();
+          if (remaining > 0) setTimeout(resolve, remaining);
+          else resolve();
+        }),
+      ]);
       setData(value);
       setModel((current) =>
         value.models.some((m) => m.id === current)
@@ -57,20 +59,13 @@ export function App() {
   }, []);
   useEffect(() => {
     setHoleId("");
-    if (data && data.workflows.length > 1) setPickingHole(true);
+    setPickingHole(!!data && data.workflows.length > 1);
   }, [data?.user.id]);
   useEffect(() => {
-    void (async () => {
-      if (!(await refresh()))
-        try {
-          setPreview(await api("/api/preview"));
-        } catch {
-          setPreview({ images: [], workflows: [] });
-        }
-      setLoading(false);
-    })();
+    void refresh().finally(() => setLoading(false));
   }, [refresh]);
   useEffect(() => {
+    if (!data) return;
     let alive = true;
     const ping = () =>
       api<{ online: boolean; checked: number }>("/api/health")
@@ -86,11 +81,10 @@ export function App() {
       alive = false;
       clearInterval(timer);
     };
-  }, []);
+  }, [data?.user.id]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setLogin(false);
         setMenu(false);
       }
     };
@@ -102,8 +96,8 @@ export function App() {
     setInitialWorkflow(workflow || "");
     setPage("create");
   };
-  const images = data?.images || preview.images,
-    workflows = data?.workflows || preview.workflows;
+  const images = data?.images || [],
+    workflows = data?.workflows || [];
   const hole =
     workflows.find((workflow) => workflow.id === holeId) || workflows[0];
   const holeImages = images.filter(
@@ -118,6 +112,18 @@ export function App() {
     (job) =>
       ["queued", "running"].includes(job.state) && job.workflow === hole?.id,
   );
+  if (!data)
+    return (
+      <Signin
+        checking={loading}
+        onSuccess={async (notBefore) => {
+          if (!(await refresh(notBefore)))
+            throw new Error(
+              "Signed in, but your space could not load. Please retry.",
+            );
+        }}
+      />
+    );
   return (
     <>
       <a className="skip-link" href="#studio-main">
@@ -126,7 +132,7 @@ export function App() {
       <div
         className="app-shell"
         data-theme={hole?.theme || "custom"}
-        inert={login || pickingHole ? true : undefined}
+        inert={pickingHole || undefined}
       >
         <Sidebar
           page={page}
@@ -137,14 +143,13 @@ export function App() {
             if (!id) setChatReset((value) => value + 1);
           }}
           user={data?.user}
-          preview={!data}
-          onSignin={() => setLogin(true)}
+          preview={false}
+          onSignin={() => setData(null)}
           onLogout={async () => {
             await api("/api/auth/signout", {});
             setData(null);
             setConversation("");
             setPage("chat");
-            setLogin(true);
           }}
           open={menu}
           onClose={() => setMenu(false)}
@@ -222,12 +227,6 @@ export function App() {
                     : "Image server offline"
                   : "Checking image server"}
               </span>
-              {!data && (
-                <button className="signin-top" onClick={() => setLogin(true)}>
-                  Sign in
-                  <Icon name="arrow" size={14} />
-                </button>
-              )}
               {data && <span className="account-badge">{data.user.name}</span>}
             </div>
           </header>
@@ -237,111 +236,79 @@ export function App() {
                 {modeError}
               </p>
             )}
-            {!data && !loading && (
-              <div className="preview-banner">
-                <span>
-                  <Icon name="spark" size={14} />
-                  Take a look around Rabbit Hole.
-                </span>
-                <button onClick={() => setLogin(true)}>
-                  Sign in to create in your own space{" "}
-                  <Icon name="arrow" size={13} />
-                </button>
-              </div>
-            )}
-            {loading ? (
-              <RabbitLoading />
-            ) : (
-              <>
-                {page === "chat" && (
-                  <ChatView
-                    key={`${hole?.id}-${chatReset}`}
-                    model={hole?.chat_model || model}
-                    workflow={hole?.id}
-                    world={hole}
-                    onModel={setModel}
-                    conversation={conversation}
-                    preview={!data}
-                    onSignin={() => setLogin(true)}
-                    onSaved={() => void refresh()}
-                    onCreate={(prompt) => create(prompt)}
-                  />
-                )}{" "}
-                {page === "create" && (
-                  <CreateView
-                    key={hole?.id}
-                    model={hole?.chat_model || model}
-                    workflows={hole ? [hole] : []}
-                    images={holeImages}
-                    initialPrompt={initialPrompt}
-                    initialWorkflow={initialWorkflow}
-                    preview={!data}
-                    onSignin={() => setLogin(true)}
-                    onSaved={() => void refresh()}
-                    activeJob={activeJob}
-                  />
-                )}{" "}
-                {page === "library" && (
-                  <section className="library-page">
-                    <div className="view-top">
-                      <div className="breadcrumb">
-                        Your space <span>/</span> My library
-                      </div>
-                      <span className="page-tag">
-                        <Icon name="lock" size={12} />
-                        YOUR PERSONAL COLLECTION
-                      </span>
+            <>
+              {page === "chat" && (
+                <ChatView
+                  key={`${hole?.id}-${chatReset}`}
+                  model={hole?.chat_model || model}
+                  workflow={hole?.id}
+                  world={hole}
+                  onModel={setModel}
+                  conversation={conversation}
+                  preview={false}
+                  onSignin={() => setData(null)}
+                  onSaved={() => void refresh()}
+                  onCreate={(prompt) => create(prompt)}
+                />
+              )}{" "}
+              {page === "create" && (
+                <CreateView
+                  key={hole?.id}
+                  model={hole?.chat_model || model}
+                  workflows={hole ? [hole] : []}
+                  images={holeImages}
+                  initialPrompt={initialPrompt}
+                  initialWorkflow={initialWorkflow}
+                  preview={false}
+                  onSignin={() => setData(null)}
+                  onSaved={() => void refresh()}
+                  activeJob={activeJob}
+                />
+              )}{" "}
+              {page === "library" && (
+                <section className="library-page">
+                  <div className="view-top">
+                    <div className="breadcrumb">
+                      Your space <span>/</span> My library
                     </div>
-                    <div className="library-heading">
-                      <p className="eyebrow">CURIOSITIES WORTH KEEPING</p>
-                      <h1>
-                        Your cabinet <em>of curiosities.</em>
-                      </h1>
-                      <p>The wonderful things you found along the way.</p>
-                    </div>
-                    <div
-                      className="library-results panel-scroll"
-                      role="region"
-                      aria-label="Image library"
-                      tabIndex={0}
-                    >
-                      <Gallery
-                        images={holeImages}
-                        preview={!data}
-                        onChanged={() => void refresh()}
-                        onReuse={(image) =>
-                          create(image.prompt, image.workflow)
-                        }
-                      />
-                    </div>
-                  </section>
-                )}{" "}
-                {page === "admin" && data?.user.role === "admin" && (
-                  <AdminView onSaved={() => void refresh()} />
-                )}
-                {page === "people" && data?.user.role === "admin" && (
-                  <ProfileAdmin onSaved={() => void refresh()} />
-                )}
-              </>
-            )}
+                    <span className="page-tag">
+                      <Icon name="lock" size={12} />
+                      YOUR PERSONAL COLLECTION
+                    </span>
+                  </div>
+                  <div className="library-heading">
+                    <p className="eyebrow">CURIOSITIES WORTH KEEPING</p>
+                    <h1>
+                      Your cabinet <em>of curiosities.</em>
+                    </h1>
+                    <p>The wonderful things you found along the way.</p>
+                  </div>
+                  <div
+                    className="library-results panel-scroll"
+                    role="region"
+                    aria-label="Image library"
+                    tabIndex={0}
+                  >
+                    <Gallery
+                      images={holeImages}
+                      preview={false}
+                      onChanged={() => void refresh()}
+                      onReuse={(image) => create(image.prompt, image.workflow)}
+                    />
+                  </div>
+                </section>
+              )}{" "}
+              {page === "admin" && data?.user.role === "admin" && (
+                <AdminView onSaved={() => void refresh()} />
+              )}
+              {page === "people" && data?.user.role === "admin" && (
+                <ProfileAdmin onSaved={() => void refresh()} />
+              )}
+            </>
           </main>
           <MobileNav page={page} onPage={setPage} />
         </div>
       </div>
-      {login && (
-        <Signin
-          onClose={() => setLogin(false)}
-          onSuccess={async () => {
-            if (await refresh()) {
-              setLogin(false);
-            } else {
-              throw new Error(
-                "Signed in, but your models and workflows could not load. Try again.",
-              );
-            }
-          }}
-        />
-      )}
       {pickingHole && (
         <HolePicker
           holes={workflows}

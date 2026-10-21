@@ -6,6 +6,7 @@ React, TypeScript and Vite frontend; Python/Starlette backend. Open WebUI suppli
 
 ## Features
 
+- Plain public sign-in with no app preview; a falling silhouette transition during authentication, with reduced-motion support.
 - Rabbit Hole, Mars, Grand Estate and Cartoon Land interface themes.
 - Named holes and random entry from the current account's permitted holes.
 - Administrator-configured models and fixed LoRAs. Users edit prompts, ratio, resolution, steps and seeds where supported.

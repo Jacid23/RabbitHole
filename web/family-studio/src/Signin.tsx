@@ -1,51 +1,38 @@
 import { useState } from "react";
 import { api } from "./api";
-import { Icon, StudioMark } from "./Icons";
-import { useDialog } from "./useDialog";
+import { LoginDescent } from "./LoginDescent";
+
 export function Signin({
-  onClose,
+  checking = false,
   onSuccess,
 }: {
-  onClose: () => void;
-  onSuccess: () => Promise<void>;
+  checking?: boolean;
+  onSuccess: (notBefore: number) => Promise<void>;
 }) {
-  const dialog = useDialog(true, onClose);
-  const [email, setEmail] = useState(""),
-    [password, setPassword] = useState(""),
-    [busy, setBusy] = useState(false),
-    [authenticated, setAuthenticated] = useState(false),
-    [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [error, setError] = useState("");
   return (
-    <div className="modal-backdrop">
+    <main className="public-signin">
+      <div className="public-signin-brand">Rabbit Hole</div>
       <section
-        ref={dialog}
-        className="signin dialog"
-        role="dialog"
-        aria-modal="true"
+        className="public-signin-card"
         aria-labelledby="signin-title"
+        inert={busy || undefined}
       >
-        <button
-          className="icon-button dialog-close"
-          aria-label="Close sign in"
-          onClick={onClose}
-        >
-          <Icon name="close" />
-        </button>
-        <StudioMark />
-        <p className="eyebrow">YOU FOUND THE DOOR</p>
-        <h1 id="signin-title">
-          Curiouser
-          <br />& curiouser.
-        </h1>
-        <p>
-          Use your existing Open WebUI account.
-          <br />
-          Your models and access come with you.
-        </p>
+        <h1 id="signin-title">Sign in</h1>
+        <p>Use your account to continue.</p>
         <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (busy) return;
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (busy || checking) return;
+            const notBefore =
+              Date.now() +
+              (window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? 0
+                : 1800);
             setBusy(true);
             setError("");
             try {
@@ -57,9 +44,9 @@ export function Signin({
                 setAuthenticated(true);
                 setPassword("");
               }
-              await onSuccess();
-            } catch (e) {
-              setError(String((e as Error).message));
+              await onSuccess(notBefore);
+            } catch (err) {
+              setError((err as Error).message);
             } finally {
               setBusy(false);
             }
@@ -74,9 +61,9 @@ export function Signin({
                   autoComplete="username"
                   required
                   autoFocus
+                  disabled={checking}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
               <label>
@@ -85,33 +72,28 @@ export function Signin({
                   type="password"
                   autoComplete="current-password"
                   required
+                  disabled={checking}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
             </>
           )}
           {error && (
-            <p role="alert" className="error">
+            <p role="alert" className="public-signin-error">
               {error}
             </p>
           )}
-          <button className="primary" disabled={busy}>
-            {busy
-              ? authenticated
-                ? "Going down the rabbit hole…"
-                : "Signing in…"
+          <button type="submit" disabled={busy || checking}>
+            {checking
+              ? "Checking session…"
               : authenticated
-                ? "Retry opening Rabbit Hole"
-                : "Enter Rabbit Hole"}
-            <Icon name="arrow" size={17} />
+                ? "Retry opening your space"
+                : "Sign in"}
           </button>
         </form>
-        <div className="signin-foot">
-          <Icon name="lock" size={13} />
-          Account access is checked by your Open WebUI server.
-        </div>
       </section>
-    </div>
+      {busy && <LoginDescent />}
+    </main>
   );
 }

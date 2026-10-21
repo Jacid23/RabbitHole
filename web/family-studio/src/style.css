@@ -313,17 +313,6 @@ button:hover:not(:disabled) {
 .server-health.offline i {
   background: #b58470;
 }
-.signin-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #2b2824;
-  color: #dfbd98;
-  border: 1px solid #494036;
-  border-radius: 6px;
-  font-size: 12px;
-  padding: 8px 11px;
-}
 .account-badge {
   font-size: 12px;
   color: #a3aaa9;
@@ -1142,36 +1131,14 @@ button:hover:not(:disabled) {
   top: 16px;
   right: 16px;
 }
-.signin > .studio-mark {
-  width: 88px;
-  height: 88px;
-  margin-bottom: 24px;
-}
-.signin .eyebrow {
-  font-size: 9px;
-  margin: 0 0 15px;
-}
-.signin h1 {
-  font-size: 42px;
-  line-height: 1.05;
-  letter-spacing: -1.6px;
-  font-weight: 450;
-  margin: 0;
-}
-.signin > p:not(.eyebrow) {
-  font-size: 13px;
-  color: #91a395;
-  line-height: 1.9;
-  margin: 20px 0 27px;
-}
-.signin form label,
+
 .admin-editor > label {
   display: block;
   font-size: 12px;
   color: #b5c1ad;
   margin: 17px 0;
 }
-.signin input,
+
 .admin-editor input,
 .admin-editor textarea {
   display: block;
@@ -1182,21 +1149,6 @@ button:hover:not(:disabled) {
   padding: 11px 12px;
   font-size: 14px;
   margin-top: 8px;
-}
-.signin form .primary {
-  margin-top: 12px;
-  width: 100%;
-  justify-content: space-between;
-}
-.signin-foot {
-  border-top: 1px solid #344331;
-  margin-top: 26px;
-  padding-top: 16px;
-  font-size: 10px;
-  color: #809077;
-  display: flex;
-  align-items: center;
-  gap: 7px;
 }
 .error {
   font-size: 13px;
@@ -1744,10 +1696,6 @@ button:hover:not(:disabled) {
   .server-health {
     font-size: 10px;
   }
-  .signin-top {
-    font-size: 11px;
-    padding: 7px 9px;
-  }
   .preview-banner {
     padding: 9px 18px;
     flex-direction: column;
@@ -1879,9 +1827,6 @@ button:hover:not(:disabled) {
   }
   .dialog {
     padding: 30px 24px;
-  }
-  .signin h1 {
-    font-size: 36px;
   }
   .modal-backdrop {
     padding: 16px;

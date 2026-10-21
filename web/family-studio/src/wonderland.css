@@ -146,13 +146,6 @@ body {
 .server-health.offline {
   color: #ffbdc4;
 }
-.signin-top {
-  border: 1px solid #b59bc84d;
-  background: #392747;
-  color: #eeddf9;
-  border-radius: 9px;
-  min-height: 40px;
-}
 .main-scroll {
   scrollbar-color: #665077 transparent;
   scroll-padding-bottom: 24px;
@@ -600,22 +593,6 @@ input[type="checkbox"] {
   border-color: #bf93df4d;
   border-radius: 25px;
 }
-.signin h1 {
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-  color: #e2f5bb;
-}
-.signin > p,
-.signin-foot {
-  color: #c3abd4;
-}
-.signin input {
-  background: #150e1f;
-  border-color: #ba91cf52;
-  color: #f2e5f9;
-  font-size: 16px;
-}
 .image-dialog {
   background: #1c1227;
   border-color: #b790d037;
@@ -629,36 +606,6 @@ input[type="checkbox"] {
 .mobile-brand,
 .mobile-dock {
   display: none;
-}
-.rabbit-descent {
-  min-height: 65vh;
-  gap: 0;
-  text-align: center;
-  color: #e6d7ef;
-}
-.descent-door {
-  display: grid;
-  place-items: center;
-  width: 76px;
-  height: 105px;
-  border: 1px solid #c89efc;
-  border-radius: 45px 45px 10px 10px;
-  color: #d7f2b0;
-  background: radial-gradient(ellipse, #b583e749, transparent);
-  box-shadow:
-    0 0 60px #ac6fe62b,
-    inset 0 0 25px #c4a1ef1c;
-  animation: wonder-breathe 3s ease-in-out infinite;
-}
-.rabbit-descent p {
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 23px;
-  margin: 26px 0 10px;
-}
-.rabbit-descent small {
-  color: #b99ccc;
-  font-size: 12px;
 }
 @keyframes wonder-drift {
   0%,
@@ -826,11 +773,6 @@ input[type="checkbox"] {
   }
   .account-badge {
     display: none;
-  }
-  .signin-top {
-    font-size: 11px;
-    padding: 7px 10px;
-    min-height: 36px;
   }
   .mobile-menu {
     display: inline-grid;
@@ -1062,17 +1004,6 @@ input[type="checkbox"] {
   .dialog {
     padding: 30px 24px;
   }
-  .signin > .studio-mark {
-    width: 70px;
-    height: 70px;
-    margin-bottom: 17px;
-  }
-  .signin h1 {
-    font-size: 40px;
-  }
-  .rabbit-descent p {
-    font-size: 20px;
-  }
 }
 @media (min-width: 681px) and (max-width: 1024px) and (max-height: 500px) {
   .wonder-hero {
@@ -1109,8 +1040,7 @@ input[type="checkbox"] {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .floating-card,
-  .descent-door {
+  .floating-card {
     animation: none;
   }
   .wonder-path,
