@@ -2,6 +2,7 @@ export type User = { id: string; name: string; email: string; role: string; is_a
 export type UserProfile = { name: string; sex: string; age: number | null; content_level: "general" | "teen" | "adult"; instructions: string };
 export type Model = { id: string; name: string; description: string };
 export type Workflow = {
+  opening?: HoleOpening | null;
   theme?: string;
   content_level?: string;
   chat_model?: string;
@@ -21,6 +22,15 @@ export type Workflow = {
   loras: { id: string; label: string }[];
   max_loras: number;
 };
+export type StartingIdea = { label: string; prompt: string };
+export type HoleOpening = {
+  examples?: OpeningExample[];
+  screen?: "chat" | "create";
+  greeting?: string;
+  chat_starters?: StartingIdea[];
+  image_starters?: StartingIdea[];
+};
+export type OpeningExample = { image: string; label: string; chat: string; prompt: string };
 export type ImageItem = {
   id: string;
   prompt: string;

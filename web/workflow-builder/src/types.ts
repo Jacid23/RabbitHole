@@ -30,6 +30,7 @@ export type WorkflowOptions = {
   };
 };
 export type Recipe = {
+  opening?: import("../../family-studio/src/types").HoleOpening;
   theme?: string;
   content_level?: string;
   min_age?: number;

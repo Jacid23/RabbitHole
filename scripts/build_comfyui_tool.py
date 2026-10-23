@@ -13,6 +13,8 @@ CONTROLS = ROOT / "integrations/comfyui/controls.py"
 
 
 def validate_recipe(recipe):
+    validate_opening = runpy.run_path(str(ROOT / "integrations/comfyui/opening.py"))["validate_opening"]
+    validate_opening(recipe.get("opening"))
     enhancer_model = recipe.get("enhancer_model", "")
     if not isinstance(enhancer_model, str) or len(enhancer_model) > 200 or enhancer_model != enhancer_model.strip():
         raise ValueError("Enhancer model must be a valid model ID")

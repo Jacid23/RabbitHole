@@ -4,6 +4,16 @@ import controls from "../../../integrations/comfyui/controls.py?raw";
 import type { Recipe } from "./types";
 import { validateOptions } from "./validateOptions";
 export function buildTool(recipe: Recipe, server: string) {
+  const opening = recipe.opening;
+  if (opening) {
+    if (opening.examples && (!Array.isArray(opening.examples) || opening.examples.length > 12 || opening.examples.some((example) => !/^[a-f0-9]{32}$/.test(example.image) || !example.label?.trim() || example.label.length > 70 || !example.chat?.trim() || example.chat.length > 500 || !example.prompt?.trim() || example.prompt.length > 12000))) throw Error("Each postcard needs an uploaded image, short title, chat idea and image prompt. Use at most twelve postcards.");
+    if (opening.screen && !["chat", "create"].includes(opening.screen)) throw Error("Choose a valid opening screen.");
+    if (typeof (opening.greeting || "") !== "string" || (opening.greeting?.length || 0) > 1600) throw Error("Keep the greeting within 1600 characters.");
+    for (const ideas of [opening.chat_starters || [], opening.image_starters || []]) {
+      if (!Array.isArray(ideas) || ideas.length > 3 || ideas.some((idea) => typeof idea.label !== "string" || !idea.label.trim() || idea.label.length > 70 || typeof idea.prompt !== "string" || !idea.prompt.trim() || idea.prompt.length > 12000))
+        throw Error("Each starting idea needs a label (up to 70 characters) and prompt (up to 12000 characters). Choose at most three of each kind.");
+    }
+  }
   if (recipe.enhancer_model !== undefined && (typeof recipe.enhancer_model !== "string" || recipe.enhancer_model.length > 200 || recipe.enhancer_model.trim() !== recipe.enhancer_model))
     throw Error("Choose a valid enhancer model or leave it blank.");
   validateOptions(recipe.workflow, recipe.options);

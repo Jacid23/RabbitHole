@@ -69,6 +69,7 @@ export function ChatView({
     setBusy(true);
     setMessages((v) => [
       ...v,
+      ...(!v.length && world?.opening?.greeting ? [{ role: "assistant" as const, content: world.opening.greeting }] : []),
       { role: "user", content: text },
       { role: "assistant", content: "" },
     ]);

@@ -1,6 +1,8 @@
 import { EnhancerModel } from "./EnhancerModel";
 import type { Recipe, WorkflowOptions } from "./types";
 import presets from "../../../integrations/comfyui/world-presets.json";
+import { OpeningSettings } from "../../family-studio/src/OpeningSettings";
+import "../../family-studio/src/opening.css";
 
 export type Experience = Pick<
   Recipe,
@@ -12,6 +14,7 @@ export type Experience = Pick<
   | "content_level"
   | "min_age"
   | "image_prompt"
+  | "opening"
 >;
 export function HoleExperience({
   value,
@@ -42,6 +45,7 @@ export function HoleExperience({
                 chat_prompt: preset.chat_prompt,
                 enhancer_prompt: preset.enhancer_prompt,
                 image_prompt: preset.image_prompt,
+                opening: preset.opening,
               });
               onStarter(preset.name, preset.description);
             } else onChange({ ...value, theme: "custom" });
@@ -152,6 +156,7 @@ export function HoleExperience({
           ))}
         </fieldset>
       )}
+      <OpeningSettings value={value.opening} onChange={(opening) => onChange({ ...value, opening })} />
       <p className="hint">
         Users choose this hole’s experience. Model and LoRA choices stay here;
         their prompt, shape, size and steps remain editable.

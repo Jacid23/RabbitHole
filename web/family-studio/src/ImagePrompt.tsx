@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "./api";
 import { Icon } from "./Icons";
 
-export function ImagePrompt({ prompt, onPrompt, model, workflow, running, canGenerate, preview, onSignin, onGenerate, children }: {
+export function ImagePrompt({ prompt, onPrompt, model, workflow, running, canGenerate, preview, onSignin, onGenerate, children, ideas = [] }: {
   prompt: string;
   onPrompt: (text: string) => void;
   model: string;
@@ -13,6 +13,7 @@ export function ImagePrompt({ prompt, onPrompt, model, workflow, running, canGen
   onSignin: () => void;
   onGenerate: () => void;
   children?: ReactNode;
+  ideas?: string[];
 }) {
   const [enhancing, setEnhancing] = useState(false),
     [history, setHistory] = useState<string[]>([]),
@@ -78,7 +79,7 @@ export function ImagePrompt({ prompt, onPrompt, model, workflow, running, canGen
             setError("");
             editor.current?.focus();
           }}>Undo enhance</button>}
-          <button type="button" className="text-button" disabled={enhancing} onClick={() => { onPrompt("A small wooden cabin floating above the clouds, warm window light, whimsical illustrated style."); setNotice(""); }}>Try an idea</button>
+          <button type="button" className="text-button" disabled={enhancing || running} onClick={() => { onPrompt(ideas.length ? ideas[Math.floor(Math.random() * ideas.length)] : "A small wooden cabin floating above the clouds, warm window light, whimsical illustrated style."); setNotice(""); }}>Try an idea</button>
         </div>
       </div>
       <div className="prompt-feedback" aria-live="polite">

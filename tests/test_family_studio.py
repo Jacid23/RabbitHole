@@ -68,6 +68,70 @@ def studio(tmp_path,monkeypatch):
 def login(client,owner='a'):client.cookies.set('studio_session','session-'+owner)
 
 
+def test_opening_greeting_is_context_once_and_never_runs_on_entry(studio):
+    app,client,state=studio;login(client)
+    path=next(app.state.settings.recipes.glob('*.recipe.json'))
+    recipe=json.loads(path.read_text());recipe['opening']={'greeting':'Welcome to the imaginary chocolate factory.', 'chat_starters':[{'label':'Invent a sweet','prompt':'What shall we invent?'}]}
+    path.write_text(json.dumps(recipe))
+    assert client.get('/api/bootstrap').json()['workflows'][0]['opening']==recipe['opening']
+    assert not any(call.url.path=='/api/chat/completions' for call in state['calls'])
+    reply=client.post('/api/chat',json={'model':'chat-a','workflow':recipe['id'],'message':'What shall we invent?'})
+    assert reply.status_code==200
+    frames=[json.loads(line[6:]) for line in reply.text.splitlines() if line.startswith('data: ')]
+    ident=next(frame['id'] for frame in frames if frame['type']=='conversation')
+    saved=client.get('/api/chats/'+ident).json()
+    assert saved['messages'][0]=={'role':'assistant','content':recipe['opening']['greeting']}
+    assert client.post('/api/chat',json={'model':'chat-a','workflow':recipe['id'],'conversation':ident,'message':'Make it sparkle.'}).status_code==200
+    sent=json.loads([r for r in state['calls'] if r.url.path=='/api/chat/completions'][-1].content)
+    assert sum(m['content']==recipe['opening']['greeting'] for m in sent['messages'])==1
+    assert sent['messages'][-1]['content']=='Make it sparkle.'
+
+
+def test_postcards_are_private_then_hole_and_rating_scoped(studio):
+    app,client,state=studio
+    image=io.BytesIO();Image.new('RGB',(32,32),'gold').save(image,format='PNG')
+    assert client.post('/api/admin/opening-images',content=image.getvalue()).status_code==401
+    login(client,'b')
+    assert client.post('/api/admin/opening-images',content=image.getvalue()).status_code==403
+    login(client)
+    reply=client.post('/api/admin/opening-images',content=image.getvalue());assert reply.status_code==200
+    ident=reply.json()['image'];assert len(ident)==32
+    assert client.get('/api/admin/opening-images/'+ident).headers['content-type']=='image/webp'
+    path=next(app.state.settings.recipes.glob('*.recipe.json'));recipe=json.loads(path.read_text())
+    recipe['opening']={'examples':[{'image':ident,'label':'The golden room','chat':'What is behind that door?','prompt':'A golden door in an imaginary chocolate factory.'}]}
+    assert client.post('/api/admin/workflows',json=recipe).status_code==200
+    url=f'/api/workflows/{recipe["id"]}/examples/{ident}'
+    assert client.get(url).status_code==200
+    assert client.get(f'/api/workflows/{recipe["id"]}/examples/'+('f'*32)).status_code==404
+    client.cookies.clear();assert client.get(url).status_code==401
+    login(client,'b');assert client.get(url).status_code==403
+    assert client.get('/api/admin/opening-images/'+ident).status_code==403
+    monkey=AsyncMock(return_value={recipe['id']});app.state.gateway.tools=monkey
+    assert client.get(url).status_code==200
+    recipe.update(content_level='adult',min_age=18);path.write_text(json.dumps(recipe))
+    assert client.get(url).status_code==403
+    login(client);app.state.auth.sessions['session-a'].user_mode=True
+    assert client.get(url).status_code==403
+    assert client.post('/api/admin/opening-images',content=image.getvalue()).status_code==403
+
+
+def test_postcard_upload_and_publish_validation(studio):
+    app,client,state=studio;login(client)
+    assert client.post('/api/admin/opening-images',content=b'<svg onload="alert(1)"></svg>').status_code==400
+    assert client.post('/api/admin/opening-images',content=b'x'*(8*1024*1024+1)).status_code==413
+    path=next(app.state.settings.recipes.glob('*.recipe.json'));recipe=json.loads(path.read_text())
+    recipe['opening']={'examples':[{'image':'a'*32,'label':'Missing image','chat':'What is here?','prompt':'A curious room.'}]}
+    assert client.post('/api/admin/workflows',json=recipe).status_code==400
+    assert not (app.state.settings.recipes/(recipe['id']+'.recipe.pending')).exists()
+
+
+@pytest.mark.parametrize('opening', [[], {'screen':[]}, {'greeting':17}, {'greeting':'x'*1601}, {'chat_starters':[{'label':'','prompt':'Hello'}]}, {'image_starters':[{'label':'Image','prompt':' '}]}, {'examples':[{'image':'../../x','label':'x','chat':'x','prompt':'x'}]}, {'examples':[{'image':'a'*32,'label':'x','chat':'x','prompt':'x','url':'https://external.test/image'}]}])
+def test_invalid_opening_is_a_client_error(studio,opening):
+    app,client,state=studio;login(client)
+    recipe=json.loads(next(app.state.settings.recipes.glob('*.recipe.json')).read_text());recipe['opening']=opening
+    assert client.post('/api/admin/workflows',json=recipe).status_code==400
+
+
 def test_no_unauthenticated_private_api(studio):
     app,client,state=studio
     for path in ['/api/bootstrap','/api/media/unknown','/api/jobs/unknown','/api/admin/workflows']:

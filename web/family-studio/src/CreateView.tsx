@@ -158,7 +158,15 @@ export function CreateView({
             preview={preview}
             onSignin={onSignin}
             onGenerate={() => void generate()}
+            ideas={[...(workflow?.opening?.examples || []).map((example) => example.prompt), ...(workflow?.opening?.image_starters || []).map((idea) => idea.prompt)]}
           >
+            {!!workflow?.opening?.image_starters?.length && (
+              <div className="image-starting-ideas" role="group" aria-label="Image ideas">
+                {workflow.opening.image_starters.map((idea, index) => (
+                  <button key={index} type="button" className="starting-idea-chip" disabled={running} onClick={() => setPrompt(idea.prompt)}>{idea.label}</button>
+                ))}
+              </div>
+            )}
             {workflow?.needs_image && (
               <label className="attach-input">
                 {inputImage ? "Image attached ✓" : "Choose the image to edit"}

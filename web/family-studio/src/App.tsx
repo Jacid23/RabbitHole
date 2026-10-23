@@ -17,6 +17,7 @@ import "./wonderland.css";
 import "./app-layout.css";
 import "./world-themes.css";
 import "./signin.css";
+import "./opening.css";
 export function App() {
   useMobileViewport();
   const [data, setData] = useState<Bootstrap | null>(null),
@@ -60,6 +61,10 @@ export function App() {
   useEffect(() => {
     setHoleId("");
     setPickingHole(!!data && data.workflows.length > 1);
+    const first = data?.workflows[0];
+    setPage(first?.opening?.screen === "create" ? "create" : "chat");
+    setInitialPrompt(first?.opening?.screen === "create" ? first.opening.image_starters?.[0]?.prompt || "" : "");
+    setInitialWorkflow(first?.id || "");
   }, [data?.user.id]);
   useEffect(() => {
     void refresh().finally(() => setLoading(false));
@@ -248,7 +253,7 @@ export function App() {
                   preview={false}
                   onSignin={() => setData(null)}
                   onSaved={() => void refresh()}
-                  onCreate={(prompt) => create(prompt)}
+                  onCreate={(prompt) => create(prompt, hole?.id)}
                 />
               )}{" "}
               {page === "create" && (
@@ -315,11 +320,13 @@ export function App() {
           selected={hole?.id}
           onClose={() => setPickingHole(false)}
           onChoose={(id) => {
+            const chosen = workflows.find((workflow) => workflow.id === id);
             setHoleId(id);
             setConversation("");
-            setInitialPrompt("");
+            setChatReset((value) => value + 1);
+            setInitialPrompt(chosen?.opening?.screen === "create" ? chosen.opening.image_starters?.[0]?.prompt || "" : "");
             setInitialWorkflow(id);
-            setPage("chat");
+            setPage(chosen?.opening?.screen === "create" ? "create" : "chat");
             setPickingHole(false);
           }}
         />

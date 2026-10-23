@@ -15,7 +15,7 @@ body {
   color: #fff;
 }
 .app-shell {
-  height: var(--app-height, 100dvh);
+  height: min(var(--app-height, 100dvh), 100dvh);
   background:
     radial-gradient(ellipse at 78% 5%, #46236e30, transparent 50%), #100b19;
 }

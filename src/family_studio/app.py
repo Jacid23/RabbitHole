@@ -25,6 +25,7 @@ from .enhance import PromptEnhancer
 from .jobs import Jobs
 from .store import Store
 from .profiles import Profiles, UserProfile
+from .opening_images import OpeningImages
 
 
 class Signin(BaseModel):
@@ -88,6 +89,7 @@ def create_app(settings=None):
     auth, gateway = Auth(settings), Gateway(settings)
     profiles = Profiles(store)
     catalog = Catalog(settings, gateway, profiles)
+    opening_images = OpeningImages(settings, auth, catalog)
     jobs, chat = Jobs(settings, store, catalog), Chat(settings, store, gateway)
     enhancer = PromptEnhancer(settings, gateway)
 
@@ -242,6 +244,7 @@ def create_app(settings=None):
             recipe = await catalog.require(session, data["workflow"])
             data["model"] = recipe.get("chat_model") or data["model"]
             data["system_prompt"] = recipe.get("chat_prompt", "")
+            data["greeting"] = (recipe.get("opening") or {}).get("greeting", "")
         data["system_prompt"] = ((data.get("system_prompt") or "") + "\n\n" + profiles.context(session)).strip()
         return await chat.send(session, data)
 
@@ -337,6 +340,9 @@ def create_app(settings=None):
         Route("/api/chat", chats, methods=["POST"]), Route("/api/chats/{id}", get_chat),
         Route("/api/v1/files/{id}/content", proxy_file), Route("/api/admin/workflows", admin, methods=["GET", "POST"]),
         Route("/api/admin/loras", admin_loras), Route("/api/admin/builder", admin_builder),
+        Route("/api/admin/opening-images", opening_images.upload, methods=["POST"]),
+        Route("/api/admin/opening-images/{image}", opening_images.admin_image),
+        Route("/api/workflows/{id}/examples/{image}", opening_images.image),
         Route("/api/preview", preview), Route("/api/preview/{id}", preview_image)]
     if (settings.frontend / "assets").exists():
         routes.append(Mount("/assets", StaticFiles(directory=settings.frontend / "assets")))

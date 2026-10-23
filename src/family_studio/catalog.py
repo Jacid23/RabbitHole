@@ -46,6 +46,7 @@ class Catalog:
                 "enhancer_model": recipe.get("enhancer_model", ""),
                 "chat_model": recipe.get("chat_model", ""),
                 "theme": recipe.get("theme", "custom"), "content_level": recipe.get("content_level", "general"),
+                "opening": recipe.get("opening"),
                 "description": recipe["description"], "size": options.get("size"),
                 "steps": {**steps, "default": default_steps} if steps else None,
                 "seed": bool(recipe.get("seed_inputs")), "needs_image": bool(recipe.get("image_inputs")),
@@ -55,6 +56,9 @@ class Catalog:
     async def save(self, session, recipe):
         """Publish generated tool source, preserving its existing access grants."""
         builder.validate_recipe(recipe)
+        for example in (recipe.get("opening") or {}).get("examples", []):
+            if not (self.settings.data / "opening-images" / (example["image"] + ".webp")).is_file():
+                raise HTTPException(400, "Upload the postcard images in Manage Rabbit Hole before publishing.")
         if recipe.get("enhancer_model"):
             await self.gateway.require_model(session, recipe["enhancer_model"])
         if recipe.get("chat_model"):

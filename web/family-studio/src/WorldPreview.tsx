@@ -3,15 +3,17 @@ import { createPortal } from "react-dom";
 import { useDialog } from "./useDialog";
 import { WonderlandWelcome } from "./WonderlandWelcome";
 import { Icon } from "./Icons";
-import type { Workflow } from "./types";
+import type { Workflow, HoleOpening } from "./types";
 
 export function WorldPreview({
   theme,
   name,
+  opening,
   onClose,
 }: {
   theme: string;
   name?: string;
+  opening?: HoleOpening;
   onClose: () => void;
 }) {
   const dialog = useDialog(true, onClose);
@@ -22,7 +24,7 @@ export function WorldPreview({
     root.inert = true;
     return () => { root.inert = previous; };
   }, []);
-  const world = { theme, name: name || "Your world" } as Workflow;
+  const world = { theme, name: name || "Your world", opening } as Workflow;
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <section

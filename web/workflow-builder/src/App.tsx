@@ -90,6 +90,7 @@ export function App() {
         content_level: saved?.content_level || "general",
         min_age: saved?.min_age || 0,
         image_prompt: saved?.image_prompt || "",
+        opening: saved?.opening,
       });
       setFileName(label);
       setPrompts(

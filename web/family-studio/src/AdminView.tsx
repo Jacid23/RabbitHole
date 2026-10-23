@@ -166,7 +166,7 @@ export function AdminView({ onSaved }: { onSaved: () => void }) {
                 }
               />
             </label>
-            <HoleSettings value={draft} models={models} loras={draft.options?.loras?.entries || []} maxLoras={draft.options?.loras?.max_count || 0} onChange={(patch) => setDraft({ ...draft, ...patch })} />
+            <HoleSettings key={draft.id} value={draft} models={models} loras={draft.options?.loras?.entries || []} maxLoras={draft.options?.loras?.max_count || 0} onChange={(patch) => setDraft({ ...draft, ...patch })} />
             {draft.options?.steps && (
               <div className="admin-step-grid">
                 <label>

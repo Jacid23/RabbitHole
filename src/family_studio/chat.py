@@ -47,6 +47,8 @@ class Chat:
         if current and current.get("workflow") and current["workflow"] != data.get("workflow"):
             raise HTTPException(404, "This conversation belongs to another hole")
         messages = (current or {}).get("messages", [])
+        if not messages and data.get("greeting"):
+            messages = [{"role": "assistant", "content": data["greeting"]}]
         messages = [*messages, {"role": "user", "content": data["message"]}]
         chat = self.store.put(owner, "chat", {"title": (current or {}).get("title") or data["message"][:64],
             "model": data["model"], "workflow": data.get("workflow"), "messages": messages}, (current or {}).get("id"))

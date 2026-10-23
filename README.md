@@ -57,6 +57,14 @@ Available visual starters include Mars, Grand Estate, Cartoon Land, Fear & Loath
 
 Custom enhancer instructions replace the built-in refiner instruction. Fixed image style applies even if Enhance is skipped. Choosing a starter overwrites its name and prompt drafts; review before publishing. The interface theme changes independently of model/LoRA selection.
 
+## Opening a hole
+
+In **Manage Rabbit Hole → When someone enters**, set an optional character greeting, editable chat starters and image ideas. A greeting becomes part of a new conversation so the model understands replies to it. Existing conversations retain their history.
+
+**Random themed postcards** pair a saved image with a scene title, chat idea and image prompt. Add up to twelve images per hole, fill the paired prompts, then publish. Entry picks one at random; **Another glimpse** picks a different postcard. **Ask the guide** fills a chat draft and **Make this scene your own** fills the image editor. Neither submits automatically. These examples load instantly from saved assets without calling a model. The normal image editor’s **Try an idea** also uses the hole’s saved prompts.
+
+Postcard images require sign-in and the same tool access and audience rating as their hole. Uploads accept PNG, JPEG or WebP under 8 MB and 16 megapixels; the app stores optimized previews in `data/opening-images`. Back up that folder alongside the database and recipes. Removing a postcard from the pool retains its file for recovery. Standalone builder recipes preserve postcard references; add the actual images through Manage Rabbit Hole on the destination installation.
+
 ## Profiles and access
 
 Administrators manage **User profiles**: preferred name, optional sex/gender and age, personal instructions, and General/Teen/Adult level. Profile context is appended to chat and Enhance instructions. Demographic facts are not automatically inserted into direct image prompts or metadata.

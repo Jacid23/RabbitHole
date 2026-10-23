@@ -2,8 +2,11 @@ import { useState } from "react";
 import { WorldPreview } from "./WorldPreview";
 import type { Model } from "./types";
 import presets from "../../../integrations/comfyui/world-presets.json";
+import { OpeningSettings } from "./OpeningSettings";
+import type { HoleOpening } from "./types";
 
 export type HoleConfiguration = {
+  opening?: HoleOpening;
   name?: string;
   description?: string;
   theme?: string;
@@ -64,6 +67,7 @@ export function HoleSettings({
         <WorldPreview
           theme={value.theme || "custom"}
           name={value.name}
+          opening={value.opening}
           onClose={() => setPreview(false)}
         />
       )}
@@ -155,6 +159,7 @@ export function HoleSettings({
           placeholder="Applied to every image, even when Enhance is skipped."
         />
       </label>
+      <OpeningSettings value={value.opening} onChange={(opening) => onChange({ opening })} uploadEnabled />
       {!!loras.length && (
         <div className="fixed-loras">
           <strong>Always use these LoRAs</strong>
