@@ -37,6 +37,8 @@ python -m family_studio --host 127.0.0.1 --port 5030
 
 `STUDIO_DATA` optionally sets the private data folder (default `.runtime/family-studio`). Set `STUDIO_SECURE_COOKIE=1` behind HTTPS and `STUDIO_PREVIEW=0` for production. Python mode reads environment variables directly and does not automatically load `.env`. Default upstreams are local Open WebUI on port 3000 and ComfyUI on 8188. A clean installation has no assigned workflows.
 
+For a Windows installation with independent launchers and writable per-user data, see [WINDOWS.md](WINDOWS.md).
+
 ### Docker
 
 Build both frontends first. Copy `.env.example` to `.env` and fill the upstream URLs. Create `data` and `workflows` directories and ensure UID/GID 1000 can write them. Run `docker compose up -d --build` from this root. The service binds only to `127.0.0.1:5030`; configure your own HTTPS reverse proxy for phone access and set `SECURE_COOKIE=1` for HTTPS.
