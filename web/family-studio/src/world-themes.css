@@ -1,3 +1,5 @@
+@import "./story-worlds.css";
+
 [data-theme="mars"] {
   --world-bg: #0e1420;
   --world-panel: #1b2530;

@@ -1,0 +1,51 @@
+[data-theme="gonzo"] {
+  --world-bg: #151e1d;
+  --world-panel: #25302b;
+  --world-glow: #df9b3930;
+  --world-accent: #f0ce70;
+  --world-line: #d7b8794d;
+  --world-soft: #c8c5ac;
+  --accent: #f0ce70;
+}
+[data-theme="wonka"] {
+  --world-bg: #211725;
+  --world-panel: #352536;
+  --world-glow: #b97d9a24;
+  --world-accent: #edca89;
+  --world-line: #d7b47c52;
+  --world-soft: #d2bfcf;
+  --accent: #edca89;
+}
+[data-theme="gonzo"] .wonder-copy h1 {
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-weight: 900;
+  letter-spacing: -.025em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+[data-theme="gonzo"] .wonder-copy h1 em { color: #f4c55e; font-style: normal; }
+[data-theme="gonzo"] :is(.wonder-chapter,.wonder-signpost,.breadcrumb,.wonder-path-heading) {
+  font-family: "Courier New", monospace;
+  letter-spacing: .11em;
+}
+[data-theme="gonzo"] .wonder-chapter > span { background: #e7b759; color: #202c29; transform: rotate(-7deg); }
+[data-theme="gonzo"] :is(.wonder-hero,.wonder-path,.chat-compose,.image-prompt,.settings-panel) { border-radius: 6px; }
+[data-theme="gonzo"] .wonder-signpost { border-block: 1px dashed #d5ae6877; padding-block: 9px; }
+[data-theme="gonzo"] .studio-surface { background-image: repeating-linear-gradient(0deg,transparent 0 5px,#ebd29a03 5px 6px) !important; }
+[data-theme="gonzo"] .new-chat { border-radius: 4px; }
+[data-theme="gonzo"] .wonder-portal { border-left: 1px solid #d7b8794d; }
+[data-theme="wonka"] .wonder-copy h1 { font-family: Georgia, serif; letter-spacing: -.045em; }
+[data-theme="wonka"] .wonder-copy h1 em { font-weight: 400; color: #edca89; }
+[data-theme="wonka"] .wonder-chapter { color: #edca89; letter-spacing: .16em; }
+[data-theme="wonka"] .wonder-signpost { font-style: italic; font-family: Georgia,serif; font-size: 16px; }
+[data-theme="wonka"] :is(.wonder-hero,.chat-compose,.image-prompt,.settings-panel) { box-shadow: inset 0 0 0 3px #e6be7b09; }
+[data-theme="wonka"] .wonder-hero { border-radius: 32px 8px 32px 8px; }
+[data-theme="wonka"] .wonder-portal::before { content:""; position:absolute; z-index:1; inset:12px; border:1px solid #e5c78b38; border-radius:50% 50% 4px 4px; pointer-events:none; }
+[data-theme="wonka"] .new-chat { background: linear-gradient(115deg,#b58a4d,#f1d294 55%,#c99b60) !important; }
+[data-theme="wonka"] .studio-surface { background-image: radial-gradient(#cbb2960b 1px,transparent 1px) !important; background-size:24px 24px !important; }
+.hole-door[data-theme="gonzo"] { background: linear-gradient(145deg,#886341,#244442 70%); border-color:#efd08288; border-radius:7px; }
+.hole-door[data-theme="wonka"] { background: linear-gradient(145deg,#765071,#312737 65%); border-color:#edca8977; box-shadow:inset 0 0 0 4px #edca8909; }
+@media(max-width:680px) {
+  [data-theme="gonzo"] .wonder-copy h1 { transform:none; }
+  [data-theme="wonka"] .wonder-hero { border-radius:20px 6px 20px 6px; }
+}

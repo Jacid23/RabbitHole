@@ -15,6 +15,8 @@ export function WonderlandWelcome({
 }) {
   const themed = world?.theme && world.theme !== "custom";
   const headings: Record<string, [string, string, string]> = {
+    gonzo: ["Buy the ticket.", "Take the ride.", "Past the neon. Into the strange. Bring your imagination."],
+    wonka: ["A golden ticket.", "An impossible world.", "A little mischief. A lot of imagination. Everything begins with an idea."],
     mars: [
       "Touch down.",
       "A world beyond.",
@@ -107,7 +109,7 @@ export function WonderlandWelcome({
           className="wonder-path path-create"
           onClick={() =>
             onCreate(
-              "A secret garden on the moon, glowing flowers, impossible colors, a little storybook magic.",
+              world?.theme === "gonzo" ? "A yellow convertible on an endless desert highway, impossible sunset, distant neon and a sky full of strange possibilities." : world?.theme === "wonka" ? "An impossible chocolate factory with copper pipes, candy trees and a winding chocolate river." : "A secret garden on the moon, glowing flowers, impossible colors, a little storybook magic.",
             )
           }
         >

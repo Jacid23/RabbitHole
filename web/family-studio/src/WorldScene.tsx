@@ -1,7 +1,11 @@
 import { useId } from "react";
+import { DesertScene } from "./DesertScene";
+import { ChocolateScene } from "./ChocolateScene";
 
 export function WorldScene({ theme }: { theme: string }) {
   const id = useId().replace(/:/g, "");
+  if (theme === "gonzo") return <DesertScene />;
+  if (theme === "wonka") return <ChocolateScene />;
   if (theme === "mars")
     return (
       <svg

@@ -53,6 +53,8 @@ Keep `data` and `workflows` persistent and backed up. Never overwrite them durin
 6. Download the recipe JSON. In Manage Rabbit Hole, **Import builder recipe**, review, optionally **Preview this world**, then publish. New tools start private. Grant intended members/group access to the tool and assigned chat/enhancer models in Open WebUI.
 7. Enter through **Change hole**. Test the persona, Enhance and a real image with that member's account before sharing.
 
+Available visual starters include Mars, Grand Estate, Cartoon Land, Fear & Loathing (desert neon), and Willy Wonka (chocolate factory). They are interface themes; workspace presets and fixed workflow loaders remain your own assignments. A graph can keep its existing custom model/LoRA loader nodes, including Basement loaders, without replacing them with the optional LoRA pool.
+
 Custom enhancer instructions replace the built-in refiner instruction. Fixed image style applies even if Enhance is skipped. Choosing a starter overwrites its name and prompt drafts; review before publishing. The interface theme changes independently of model/LoRA selection.
 
 ## Profiles and access

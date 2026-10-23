@@ -23,6 +23,31 @@ def load():
     return recipe, module.Tools(), exported
 
 
+@pytest.mark.parametrize("theme", ["gonzo", "wonka"])
+def test_story_worlds_keep_fixed_graph_and_workspace_assignment(theme):
+    recipe = json.loads((ROOT/'tests/fixtures/comfy_krea_square.recipe.json').read_text(encoding='utf8'))
+    recipe.update(theme=theme, chat_model="existing-workspace", chat_prompt="")
+    recipe['options'].pop('loras', None)
+    graph = copy.deepcopy(recipe['workflow'])
+    exported = builder.build(recipe)
+    module = types.ModuleType('story_world')
+    exec(compile(exported['content'], '<workflow>', 'exec'), module.__dict__)
+    result = module.Tools()._graph('An imaginary landscape', options={'seed': 42})
+    graph['51']['inputs']['text'] = 'An imaginary landscape'
+    graph['53']['inputs']['seed'] = 42
+    assert result == graph
+    assert recipe['chat_model'] == 'existing-workspace'
+    assert recipe['chat_prompt'] == ''
+
+
+def test_world_presets_and_validator_agree():
+    recipe, _, _ = load()
+    for preset in json.loads((ROOT/'integrations/comfyui/world-presets.json').read_text(encoding='utf8')):
+        builder.validate_recipe({**recipe, **preset})
+    with pytest.raises(ValueError, match='supported theme'):
+        builder.validate_recipe({**recipe, 'theme': 'arbitrary-theme'})
+
+
 def test_only_bound_inputs_change():
     recipe, tool, exported = load()
     original = copy.deepcopy(recipe['workflow'])

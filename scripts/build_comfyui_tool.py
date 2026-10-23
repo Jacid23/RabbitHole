@@ -20,7 +20,7 @@ def validate_recipe(recipe):
         value = recipe.get(key, "")
         if not isinstance(value, str) or len(value) > (200 if key.endswith("model") else 12000):
             raise ValueError("Invalid hole model or instructions")
-    if recipe.get("theme", "custom") not in {"custom", "mars", "estate", "cartoon"} or recipe.get("content_level", "general") not in {"general", "teen", "adult"}:
+    if recipe.get("theme", "custom") not in {"custom", "mars", "estate", "cartoon", "gonzo", "wonka"} or recipe.get("content_level", "general") not in {"general", "teen", "adult"}:
         raise ValueError("Choose a supported theme and content level")
     if type(recipe.get("min_age", 0)) is not int or not 0 <= recipe.get("min_age", 0) <= 120:
         raise ValueError("Minimum age must be between 0 and 120")
