@@ -575,3 +575,59 @@ def test_temporary_chat_uses_hole_persona_and_profile(studio):
     assert sent['model']=='chat-a' and sent['messages'][0]['content'].startswith(recipe['chat_prompt'])
     assert sent['messages'][1]=={'role':'assistant','content':recipe['opening']['greeting']}
     assert app.state.store.list('a','chat')==[]
+
+def test_chat_lock_prevents_delete_and_survives_continuing(studio):
+    app,client,_=studio;login(client)
+    chat=app.state.store.put('a','chat',{'title':'Keep this visit','model':'chat-a','workflow':'comfy_krea_square','messages':[]})
+    url='/api/chats/'+chat['id']
+    assert client.post(url+'/lock',json={}).status_code==200
+    assert client.get('/api/bootstrap').json()['chats'][0]['locked'] is True
+    assert client.post(url+'/trash',json={}).status_code==409
+    assert client.post('/api/chat',json={'model':'chat-a','workflow':'comfy_krea_square','conversation':chat['id'],'message':'Continue our visit'}).status_code==200
+    assert app.state.store.get('a',chat['id'],'chat')['locked'] is True
+    assert client.post(url+'/unlock',json={}).status_code==200
+    assert client.post(url+'/trash',json={}).status_code==200
+    assert client.get(url).status_code==404
+    bootstrap=client.get('/api/bootstrap').json()
+    assert bootstrap['chats']==[] and bootstrap['trashed_chats'][0]['id']==chat['id']
+    assert client.post(url+'/restore',json={}).status_code==200
+    restored=client.get(url).json()
+    assert restored['messages'][-1]['content']=='Hello from your model.'
+    assert restored['created']==chat['created'] and restored['locked'] is False
+    assert client.get('/api/bootstrap').json()['trashed_chats']==[]
+
+
+def test_chat_management_respects_owner_and_hole_access(studio):
+    app,client,_=studio
+    chat=app.state.store.put('a','chat',{'title':'Private','model':'chat-a','workflow':'comfy_krea_square','messages':[]})
+    url='/api/chats/'+chat['id']
+    login(client,'b')
+    for action in ['lock','unlock','trash','restore']:
+        assert client.post(url+'/'+action,json={}).status_code==404
+    login(client)
+    assert client.post(url+'/trash',json={}).status_code==200
+    login(client,'b');assert client.get('/api/bootstrap').json()['trashed_chats']==[]
+    login(client);app.state.catalog.visible=AsyncMock(return_value={})
+    assert client.get('/api/bootstrap').json()['trashed_chats']==[]
+    assert client.post(url+'/restore',json={}).status_code==403
+
+
+def test_new_lock_survives_stale_stream_write(studio):
+    app,client,_=studio;login(client)
+    chat=app.state.store.put('a','chat',{'title':'Streaming','model':'chat-a','messages':[]})
+    assert app.state.store.manage_chat('a',chat['id'],'lock')
+    app.state.store.put('a','chat',{**chat,'messages':[{'role':'assistant','content':'Finished'}]},chat['id'])
+    assert app.state.store.get('a',chat['id'],'chat')['locked'] is True
+
+
+def test_chat_cannot_be_deleted_during_a_reply(studio):
+    app,client,_=studio;login(client)
+    chat=app.state.store.put('a','chat',{'title':'Active','model':'chat-a','messages':[]})
+    from family_studio.chat import Chat
+    # Exercise the route's live Chat instance without timing-dependent model streams.
+    route=next(r for r in app.routes if getattr(r,'path','')=='/api/chats/{id}/{action}')
+    service=next(c.cell_contents for c in route.endpoint.__closure__ if isinstance(c.cell_contents,Chat))
+    service.active.add('a')
+    assert client.post('/api/chats/'+chat['id']+'/trash',json={}).status_code==409
+    assert app.state.store.get('a',chat['id'],'chat') is not None
+    service.active.clear()

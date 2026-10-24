@@ -134,6 +134,10 @@ def create_app(settings=None):
         if value.get("workflow"):
             await catalog.require(session, value["workflow"])
 
+    def chat_summary(row):
+        return {**{key: row[key] for key in ("id", "title", "model", "created", "updated")},
+                "workflow": row.get("workflow"), "locked": bool(row.get("locked", False))}
+
     async def bootstrap(request):
         session = await auth.require(request)
         models, recipes = await asyncio.gather(gateway.models(session), catalog.visible(session))
@@ -141,7 +145,8 @@ def create_app(settings=None):
         return JSONResponse({"user": public_user, "profile": profiles.get(session.user), "models": [{"id": m["id"], "name": m.get("name") or m["id"],
             "description": (m.get("info", {}).get("meta", {}) or {}).get("description", "")} for m in models],
             "workflows": [catalog.public(r) for r in recipes.values()],
-            "chats": [{**{key: row[key] for key in ("id", "title", "model", "created", "updated")}, "workflow": row.get("workflow")} for row in permitted_records(session, "chat", recipes)], "jobs": permitted_records(session, "job", recipes),
+            "chats": [chat_summary(row) for row in permitted_records(session, "chat", recipes)],
+            "trashed_chats": [chat_summary(row) for row in permitted_records(session, "trashed_chat", recipes)], "jobs": permitted_records(session, "job", recipes),
             "images": permitted_records(session, "image", recipes), "openwebui": settings.public_openwebui})
 
     async def health(request):
@@ -265,6 +270,26 @@ def create_app(settings=None):
         await require_record(session, value)
         return JSONResponse(value)
 
+    async def manage_chat(request):
+        session = await auth.require(request)
+        action = request.path_params["action"]
+        if action not in {"lock", "unlock", "trash", "restore"}:
+            raise HTTPException(404, "Conversation action not found")
+        owner, ident = session.user["id"], request.path_params["id"]
+        value = store.get(owner, ident, "trashed_chat" if action == "restore" else "chat")
+        if not value:
+            raise HTTPException(404, "Conversation not found")
+        await require_record(session, value)
+        if action == "trash" and owner in chat.active:
+            raise HTTPException(409, "Wait for the current reply to finish before deleting a conversation.")
+        try:
+            changed = store.manage_chat(owner, ident, action)
+        except ValueError as error:
+            raise HTTPException(409, str(error)) from error
+        if not changed:
+            raise HTTPException(404, "Conversation not found")
+        return JSONResponse({"ok": True})
+
     async def proxy_file(request):
         session = await auth.require(request)
         # Fixed upstream path and owner authorization remain Open WebUI's responsibility.
@@ -347,6 +372,7 @@ def create_app(settings=None):
         Route("/api/media/{id}", media), Route("/api/upload", upload, methods=["POST"]),
         Route("/api/images/trash", image_trash), Route("/api/images/{id}/{action}", change_image, methods=["POST"]),
         Route("/api/chat", chats, methods=["POST"]), Route("/api/chats/{id}", get_chat),
+        Route("/api/chats/{id}/{action}", manage_chat, methods=["POST"]),
         Route("/api/v1/files/{id}/content", proxy_file), Route("/api/admin/workflows", admin, methods=["GET", "POST"]),
         Route("/api/admin/loras", admin_loras), Route("/api/admin/builder", admin_builder),
         Route("/api/admin/opening-images", opening_images.upload, methods=["POST"]),

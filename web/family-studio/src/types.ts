@@ -52,7 +52,10 @@ export type Job = {
   comfy_id?: string;
 };
 export type ChatMessage = { role: "user" | "assistant"; content: string };
+export type ChatAction = "lock" | "unlock" | "trash" | "restore";
+export type ManageChat = (id: string, action: ChatAction) => Promise<void>;
 export type Conversation = {
+  locked?: boolean;
   workflow?: string | null;
   id: string;
   title: string;
@@ -67,6 +70,7 @@ export type Bootstrap = {
   workflows: Workflow[];
   images: ImageItem[];
   chats: Conversation[];
+  trashed_chats?: Conversation[];
   jobs: Job[];
   openwebui: string;
 };

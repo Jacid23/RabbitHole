@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { ConversationList } from "./ConversationList";
+import { HistoryPanel } from "./HistoryPanel";
 import { useDialog } from "./useDialog";
-import type { Conversation, Workflow } from "./types";
+import type { Conversation, ManageChat, Workflow } from "./types";
 import { Icon } from "./Icons";
 
 export function HolePicker({
@@ -10,8 +9,11 @@ export function HolePicker({
   onChoose,
   onClose,
   chats,
+  trashed,
+  onAction,
   onChat,
 }: {
+  trashed: Conversation[]; onAction: ManageChat;
   chats: Conversation[];
   onChat: (id: string) => void;
   holes: Workflow[];
@@ -19,11 +21,6 @@ export function HolePicker({
   onChoose: (id: string) => void;
   onClose: () => void;
 }) {
-  const [query, setQuery] = useState("");
-  const visible = chats.filter(chat => {
-    const hole = holes.find(h => h.id === chat.workflow) || (!chat.workflow ? holes[0] : undefined);
-    return hole && (chat.title + " " + hole.name).toLowerCase().includes(query.toLowerCase());
-  });
   const dialog = useDialog(true, onClose);
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -86,8 +83,7 @@ export function HolePicker({
         </div>
         <section className="entrance-history" aria-label="Conversations across your holes">
           <div className="history-heading"><div><p className="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h3>Continue your journey.</h3></div><span>{chats.length} saved</span></div>
-          <input className="history-search" aria-label="Search all conversations" placeholder="Find a conversation or a hole…" value={query} onChange={e => setQuery(e.target.value)} />
-          <ConversationList chats={visible} holes={holes} showWorld onChat={onChat} />
+          <HistoryPanel chats={chats} trashed={trashed} holes={holes} showWorld onChat={onChat} onAction={onAction} />
         </section>
         {!holes.length && (
           <p>Your administrator hasn’t assigned any holes yet.</p>

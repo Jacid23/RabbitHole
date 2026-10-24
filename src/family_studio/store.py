@@ -30,9 +30,11 @@ class Store:
         ident = ident or str(uuid.uuid4())
         now = time.time()
         with self.lock, self.db:
-            existing = self.db.execute("SELECT owner,kind FROM records WHERE id=?", (ident,)).fetchone()
+            existing = self.db.execute("SELECT owner,kind,value FROM records WHERE id=?", (ident,)).fetchone()
             if existing and (existing["owner"] != owner or existing["kind"] != kind):
                 raise PermissionError("Record belongs to another account")
+            if existing and kind == "chat":
+                value = {**value, "locked": bool(json.loads(existing["value"]).get("locked", False))}
             self.db.execute("""INSERT INTO records VALUES (?,?,?,?,?,?)
                 ON CONFLICT(id) DO UPDATE SET updated=excluded.updated,value=excluded.value""",
                 (ident, owner, kind, now, now, json.dumps(value)))
@@ -76,6 +78,28 @@ class Store:
                 (destination, time.time(), owner, ident, source),
             )
         return result.rowcount == 1
+
+    def manage_chat(self, owner, ident, action):
+        source = "trashed_chat" if action == "restore" else "chat"
+        with self.lock, self.db:
+            row = self.db.execute("SELECT value FROM records WHERE owner=? AND id=? AND kind=?",
+                                  (owner, ident, source)).fetchone()
+            if not row:
+                return False
+            value = json.loads(row["value"])
+            if action in {"lock", "unlock"}:
+                value["locked"] = action == "lock"
+                self.db.execute("UPDATE records SET value=? WHERE owner=? AND id=? AND kind='chat'",
+                                (json.dumps(value), owner, ident))
+            elif action in {"trash", "restore"}:
+                if action == "trash" and value.get("locked"):
+                    raise ValueError("Unlock this conversation before deleting it.")
+                destination = "chat" if action == "restore" else "trashed_chat"
+                self.db.execute("UPDATE records SET kind=?,updated=? WHERE owner=? AND id=? AND kind=?",
+                                (destination, time.time(), owner, ident, source))
+            else:
+                raise ValueError("Unknown conversation action")
+        return True
 
     def close(self):
         self.db.close()

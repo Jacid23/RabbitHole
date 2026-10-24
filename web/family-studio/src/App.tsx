@@ -13,7 +13,7 @@ import { VisitHistory } from "./VisitHistory";
 import { HolePicker } from "./HolePicker";
 import { ProfileAdmin } from "./ProfileAdmin";
 import { useMobileViewport } from "./useMobileViewport";
-import type { Bootstrap, Page } from "./types";
+import type { Bootstrap, Page, ChatAction } from "./types";
 import "./style.css";
 import "./wonderland.css";
 import "./app-layout.css";
@@ -154,6 +154,15 @@ export function App() {
     else setPage(next);
   };
   const entrance = () => leaveTemporary(() => { setTemporary(false); setPickingHole(true); });
+  const manageChat = async (id: string, action: ChatAction) => {
+    await api(`/api/chats/${id}/${action}`, {});
+    if (action === "trash") {
+      setLastVisits(v => Object.fromEntries(Object.entries(v).filter(([, visit]) => visit !== id)));
+      if (conversation === id) { setConversation(""); setChatReset(v => v + 1); }
+    }
+    if (!await refresh()) throw new Error("Change saved. Reopen history to refresh the list.");
+  };
+  const holeTrash = (data?.trashed_chats || []).filter(chat => chat.workflow === hole?.id || (!chat.workflow && hole?.id === workflows[0]?.id));
   if (!data)
     return (
       <Signin
@@ -184,6 +193,7 @@ export function App() {
           onEntrance={entrance}
           holes={workflows}
           activeChat={conversation}
+          onAction={manageChat}
           user={data?.user}
           preview={false}
           onSignin={() => setData(null)}
@@ -326,12 +336,14 @@ export function App() {
         </div>
       </div>
       {leaveAction && <LeaveTemporary onCancel={() => setLeaveAction(null)} onLeave={() => { leaveAction(); setLeaveAction(null); }} />}
-      {historyOpen && !leaveAction && hole && <VisitHistory chats={holeChats} hole={hole} onChat={openChat} onClose={() => setHistoryOpen(false)} />}
+      {historyOpen && !leaveAction && hole && <VisitHistory chats={holeChats} trashed={holeTrash} onAction={manageChat} hole={hole} onChat={openChat} onClose={() => setHistoryOpen(false)} />}
       {pickingHole && (
         <HolePicker
           holes={workflows}
           selected={hole?.id}
           chats={data.chats}
+          trashed={data.trashed_chats || []}
+          onAction={manageChat}
           onChat={openChat}
           onClose={() => setPickingHole(false)}
           onChoose={(id) => {

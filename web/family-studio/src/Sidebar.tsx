@@ -1,6 +1,6 @@
 import { ConversationList } from "./ConversationList";
 import { Icon, StudioMark } from "./Icons";
-import type { Conversation, Page, User, Workflow } from "./types";
+import type { Conversation, Page, User, Workflow, ManageChat } from "./types";
 import { useDialog } from "./useDialog";
 const tabs: { page: Page; icon: string; label: string }[] = [
   { page: "chat", icon: "chat", label: "Chat" },
@@ -21,7 +21,9 @@ export function Sidebar({
   onEntrance,
   holes,
   activeChat,
+  onAction,
 }: {
+  onAction: ManageChat;
   onEntrance: () => void;
   holes: Workflow[];
   activeChat: string;
@@ -95,7 +97,7 @@ export function Sidebar({
         </nav>
         <div className="recent">
           <div className="section-label">YOUR VISITS</div>
-          <ConversationList chats={chats} holes={holes} active={activeChat} onChat={(id) => { onChat(id); onClose(); }} />
+          <ConversationList chats={chats} holes={holes} active={activeChat} onAction={onAction} onChat={(id) => { onChat(id); onClose(); }} />
         </div>
         <div className="sidebar-bottom">
           <div className="privacy-note">
