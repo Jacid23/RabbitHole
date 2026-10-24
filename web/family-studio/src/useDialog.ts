@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-export function useDialog(active: boolean, onClose: () => void) {
+export function useDialog(active: boolean, onClose: () => void, initialFocus: "field" | "control" = "field") {
   const root = useRef<HTMLElement>(null),
     close = useRef(onClose);
   close.current = onClose;
@@ -9,9 +9,9 @@ export function useDialog(active: boolean, onClose: () => void) {
     const dialog = root.current;
     if (!dialog) return;
     const first =
-      dialog.querySelector<HTMLElement>("input,textarea") ||
-      dialog.querySelector<HTMLElement>("button,a[href]");
-    first?.focus();
+      (initialFocus === "field" ? dialog.querySelector<HTMLElement>("input:not(:disabled),textarea:not(:disabled)") : null) ||
+      dialog.querySelector<HTMLElement>("button:not(:disabled),a[href]");
+    first?.focus({ preventScroll: true });
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -40,6 +40,6 @@ export function useDialog(active: boolean, onClose: () => void) {
       document.removeEventListener("keydown", keydown);
       if (previous?.isConnected) previous.focus();
     };
-  }, [active]);
+  }, [active, initialFocus]);
   return root;
 }

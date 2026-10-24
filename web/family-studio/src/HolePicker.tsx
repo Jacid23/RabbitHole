@@ -22,7 +22,7 @@ export function HolePicker({
   onChoose: (id: string) => void;
   onClose: () => void;
 }) {
-  const dialog = useDialog(true, onClose);
+  const dialog = useDialog(true, onClose, "control");
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <section

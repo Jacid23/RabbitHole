@@ -7,7 +7,7 @@ export function VisitHistory({ chats, trashed, hole, onChat, onClose, onAction, 
   trashed: Conversation[]; onAction: ManageChat; onPurge: PurgeChats;
   chats: Conversation[]; hole: Workflow; onChat: (id: string) => void; onClose: () => void;
 }) {
-  const dialog = useDialog(true, onClose);
+  const dialog = useDialog(true, onClose, "control");
   return <div className="modal-backdrop" onClick={onClose}>
     <section className="visit-dialog" data-theme={hole.theme || "custom"} ref={dialog}
       role="dialog" aria-modal="true" aria-label={`Your visits to ${hole.name}`} onClick={e => e.stopPropagation()}>
