@@ -14,7 +14,7 @@ export function StartingIdeas({ world, example, onPrompt, onCreate, interactive 
   ];
   const images = example ? [{ label: "Make this scene your own", prompt: example.prompt }] : world?.opening?.image_starters ?? [{
     label: "Dream up an image",
-    prompt: world?.theme === "gonzo" ? "A yellow convertible on an endless desert highway, impossible sunset, distant neon and a sky full of strange possibilities." : world?.theme === "wonka" ? "An impossible chocolate factory with copper pipes, candy trees and a winding chocolate river." : "A secret garden on the moon, glowing flowers, impossible colors, a little storybook magic.",
+    prompt: world?.theme === "gonzo" ? "A red convertible on an endless desert highway, impossible sunset, distant neon and a sky full of strange possibilities." : world?.theme === "wonka" ? "An impossible chocolate factory with copper pipes, candy trees and a winding chocolate river." : "A secret garden on the moon, glowing flowers, impossible colors, a little storybook magic.",
   }];
   const ideas = [
     ...chat.slice(0, 1).map((idea) => ({ ...idea, kind: "chat" as const })),
