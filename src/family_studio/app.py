@@ -59,6 +59,12 @@ class Message(BaseModel):
     workflow: str | None = Field(default=None, min_length=1, max_length=100)
 
 
+class PurgeChats(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ids: list[str] = Field(min_length=1, max_length=10000)
+    confirmed: Literal[True]
+
+
 class EnhancePrompt(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     model: str = Field(default="", max_length=200)
@@ -128,7 +134,7 @@ def create_app(settings=None):
         return reply
 
     def permitted_records(session, kind, recipes):
-        return [row for row in store.list(session.user["id"], kind) if not row.get("workflow") or row["workflow"] in recipes]
+        return [row for row in store.list(session.user["id"], kind, limit=None if kind == "trashed_chat" else 200) if not row.get("workflow") or row["workflow"] in recipes]
 
     async def require_record(session, value):
         if value.get("workflow"):
@@ -270,6 +276,23 @@ def create_app(settings=None):
         await require_record(session, value)
         return JSONResponse(value)
 
+    async def purge_chats(request):
+        session = await auth.require(request)
+        data = await body(request, PurgeChats)
+        ids = list(dict.fromkeys(data["ids"]))
+        recipes = await catalog.visible(session)
+        for ident in ids:
+            value = store.get(session.user["id"], ident, "trashed_chat")
+            if not value:
+                raise HTTPException(404, "A selected conversation is no longer in your Trash. Refresh history.")
+            if value.get("workflow") and value["workflow"] not in recipes:
+                raise HTTPException(403, "This workflow is not available to your account.")
+        try:
+            deleted = store.purge_chats(session.user["id"], ids)
+        except ValueError as error:
+            raise HTTPException(409, str(error)) from error
+        return JSONResponse({"deleted": deleted})
+
     async def manage_chat(request):
         session = await auth.require(request)
         action = request.path_params["action"]
@@ -372,6 +395,7 @@ def create_app(settings=None):
         Route("/api/media/{id}", media), Route("/api/upload", upload, methods=["POST"]),
         Route("/api/images/trash", image_trash), Route("/api/images/{id}/{action}", change_image, methods=["POST"]),
         Route("/api/chat", chats, methods=["POST"]), Route("/api/chats/{id}", get_chat),
+        Route("/api/chats/trash/purge", purge_chats, methods=["POST"]),
         Route("/api/chats/{id}/{action}", manage_chat, methods=["POST"]),
         Route("/api/v1/files/{id}/content", proxy_file), Route("/api/admin/workflows", admin, methods=["GET", "POST"]),
         Route("/api/admin/loras", admin_loras), Route("/api/admin/builder", admin_builder),

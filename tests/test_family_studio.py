@@ -631,3 +631,65 @@ def test_chat_cannot_be_deleted_during_a_reply(studio):
     assert client.post('/api/chats/'+chat['id']+'/trash',json={}).status_code==409
     assert app.state.store.get('a',chat['id'],'chat') is not None
     service.active.clear()
+
+def trashed_chat(app, owner='a', workflow='comfy_krea_square'):
+    row=app.state.store.put(owner,'chat',{'title':'Discarded visit','model':'chat-a','workflow':workflow,'messages':[{'role':'user','content':'Remember this'}]})
+    assert app.state.store.manage_chat(owner,row['id'],'trash')
+    return row
+
+
+def test_permanent_chat_delete_requires_confirmation_and_trash(studio):
+    app,client,_=studio;login(client);row=trashed_chat(app)
+    endpoint='/api/chats/trash/purge'
+    for body in [{'ids':[row['id']]},{'ids':[row['id']],'confirmed':False},{'ids':[],'confirmed':True}]:
+        assert client.post(endpoint,json=body).status_code==400
+        assert app.state.store.get('a',row['id'],'trashed_chat')
+    assert client.post(endpoint,json={'ids':[row['id'],row['id']],'confirmed':True}).json()=={'deleted':1}
+    assert app.state.store.get('a',row['id']) is None
+    assert client.post('/api/chats/'+row['id']+'/restore',json={}).status_code==404
+    assert client.get('/api/bootstrap').json()['trashed_chats']==[]
+
+
+def test_bulk_chat_purge_is_owner_scoped_and_all_or_nothing(studio):
+    app,client,_=studio;login(client)
+    own=trashed_chat(app);other=trashed_chat(app,owner='b')
+    saved=app.state.store.put('a','chat',{'title':'Saved','model':'chat-a','messages':[]})
+    for invalid in [other['id'],saved['id'],'missing']:
+        response=client.post('/api/chats/trash/purge',json={'ids':[own['id'],invalid],'confirmed':True})
+        assert response.status_code==404
+        assert app.state.store.get('a',own['id'],'trashed_chat')
+    assert app.state.store.get('b',other['id'],'trashed_chat')
+    assert app.state.store.get('a',saved['id'],'chat')
+
+
+def test_purge_checks_current_hole_permissions_and_exact_selection(studio):
+    app,client,_=studio;login(client)
+    selected=trashed_chat(app);kept=trashed_chat(app)
+    app.state.store.put('a','image',{'file':'keep.png'},'keep-image')
+    assert client.post('/api/chats/trash/purge',json={'ids':[selected['id']],'confirmed':True}).json()=={'deleted':1}
+    assert app.state.store.get('a',kept['id'],'trashed_chat')
+    assert app.state.store.get('a','keep-image','image')
+    app.state.catalog.visible=AsyncMock(return_value={})
+    assert client.post('/api/chats/trash/purge',json={'ids':[kept['id']],'confirmed':True}).status_code==403
+    assert app.state.store.get('a',kept['id'],'trashed_chat')
+
+
+def test_purge_does_not_delete_a_concurrently_restored_or_locked_chat(studio):
+    app,_,_=studio
+    first=trashed_chat(app);restored=trashed_chat(app)
+    app.state.store.manage_chat('a',restored['id'],'restore')
+    with pytest.raises(ValueError):app.state.store.purge_chats('a',[first['id'],restored['id']])
+    assert app.state.store.get('a',first['id'],'trashed_chat')
+    assert app.state.store.get('a',restored['id'],'chat')
+    locked=app.state.store.put('a','trashed_chat',{'title':'Protected legacy record','locked':True})
+    with pytest.raises(ValueError):app.state.store.purge_chats('a',[first['id'],locked['id']])
+    assert app.state.store.get('a',first['id'],'trashed_chat')
+
+
+def test_empty_trash_lists_and_removes_more_than_history_preview_limit(studio):
+    app,client,_=studio;login(client)
+    for i in range(205):app.state.store.put('a','trashed_chat',{'title':str(i),'model':'chat-a','messages':[]})
+    rows=client.get('/api/bootstrap').json()['trashed_chats']
+    assert len(rows)==205
+    assert client.post('/api/chats/trash/purge',json={'ids':[r['id'] for r in rows],'confirmed':True}).json()=={'deleted':205}
+    assert app.state.store.list('a','trashed_chat',limit=None)==[]

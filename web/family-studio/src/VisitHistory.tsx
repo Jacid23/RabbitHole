@@ -1,10 +1,10 @@
 import { HistoryPanel } from "./HistoryPanel";
 import { Icon } from "./Icons";
 import { useDialog } from "./useDialog";
-import type { Conversation, ManageChat, Workflow } from "./types";
+import type { Conversation, ManageChat, PurgeChats, Workflow } from "./types";
 
-export function VisitHistory({ chats, trashed, hole, onChat, onClose, onAction }: {
-  trashed: Conversation[]; onAction: ManageChat;
+export function VisitHistory({ chats, trashed, hole, onChat, onClose, onAction, onPurge }: {
+  trashed: Conversation[]; onAction: ManageChat; onPurge: PurgeChats;
   chats: Conversation[]; hole: Workflow; onChat: (id: string) => void; onClose: () => void;
 }) {
   const dialog = useDialog(true, onClose);
@@ -13,7 +13,7 @@ export function VisitHistory({ chats, trashed, hole, onChat, onClose, onAction }
       role="dialog" aria-modal="true" aria-label={`Your visits to ${hole.name}`} onClick={e => e.stopPropagation()}>
       <div className="section-heading"><div><p className="eyebrow">{hole.name}</p><h2>Your visits.</h2></div>
         <button className="icon-button" aria-label="Close visit history" onClick={onClose}><Icon name="close" /></button></div>
-      <HistoryPanel chats={chats} trashed={trashed} holes={[hole]} onChat={onChat} onAction={onAction} />
+      <HistoryPanel chats={chats} trashed={trashed} holes={[hole]} onChat={onChat} onAction={onAction} onPurge={onPurge} />
     </section>
   </div>;
 }

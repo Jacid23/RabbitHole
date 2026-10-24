@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Icon } from "./Icons";
 import type { ChatAction, Conversation, ManageChat, Workflow } from "./types";
 
-export function ConversationList({ chats, holes, onChat, active, showWorld = false, onAction, trash = false }: {
+export function ConversationList({ chats, holes, onChat, active, showWorld = false, onAction, onDeleteForever, trash = false }: {
   chats: Conversation[]; holes: Workflow[]; onChat: (id: string) => void;
+  onDeleteForever?: (chat: Conversation) => void;
   active?: string; showWorld?: boolean; onAction?: ManageChat; trash?: boolean;
 }) {
   const [busy, setBusy] = useState(""), [error, setError] = useState("");
@@ -31,7 +32,10 @@ export function ConversationList({ chats, holes, onChat, active, showWorld = fal
           </span>{!trash && <Icon name="arrow" size={15} />}
         </button>
         {onAction && <div className="visit-actions" aria-label={`Actions for ${chat.title}`}>
-          {trash ? <button disabled={!!busy} onClick={() => void act(chat.id, "restore")} aria-label={`Restore ${chat.title}`}>Restore</button> : <>
+          {trash ? <>
+            <button disabled={!!busy} onClick={() => void act(chat.id, "restore")} aria-label={`Restore ${chat.title}`}>Restore</button>
+            {onDeleteForever && <button className="delete-visit" disabled={!!busy || chat.locked} onClick={() => onDeleteForever(chat)} aria-label={`Permanently delete ${chat.title}`}>Delete forever</button>}
+          </> : <>
             <button disabled={!!busy} aria-pressed={!!chat.locked} onClick={() => void act(chat.id, chat.locked ? "unlock" : "lock")}
               aria-label={`${chat.locked ? "Unlock" : "Lock"} ${chat.title}`}>{chat.locked ? "Unlock" : "Lock"}</button>
             <button className="delete-visit" disabled={!!busy || chat.locked} title={chat.locked ? "Unlock before deleting" : "Move to recoverable trash"}
@@ -40,6 +44,6 @@ export function ConversationList({ chats, holes, onChat, active, showWorld = fal
         </div>}
       </article>;
     })}
-    {!sorted.length && <p className="history-empty">{trash ? "No deleted conversations. Deleted chats stay here until you restore them." : "Your saved conversations will appear here. Temporary chats leave no visit in history."}</p>}
+    {!sorted.length && <p className="history-empty">{trash ? "No deleted conversations. You can restore deleted chats or erase them permanently here." : "Your saved conversations will appear here. Temporary chats leave no visit in history."}</p>}
   </div>;
 }

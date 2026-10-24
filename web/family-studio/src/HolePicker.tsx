@@ -1,6 +1,6 @@
 import { HistoryPanel } from "./HistoryPanel";
 import { useDialog } from "./useDialog";
-import type { Conversation, ManageChat, Workflow } from "./types";
+import type { Conversation, ManageChat, PurgeChats, Workflow } from "./types";
 import { Icon } from "./Icons";
 
 export function HolePicker({
@@ -11,9 +11,10 @@ export function HolePicker({
   chats,
   trashed,
   onAction,
+  onPurge,
   onChat,
 }: {
-  trashed: Conversation[]; onAction: ManageChat;
+  trashed: Conversation[]; onAction: ManageChat; onPurge: PurgeChats;
   chats: Conversation[];
   onChat: (id: string) => void;
   holes: Workflow[];
@@ -83,7 +84,7 @@ export function HolePicker({
         </div>
         <section className="entrance-history" aria-label="Conversations across your holes">
           <div className="history-heading"><div><p className="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h3>Continue your journey.</h3></div><span>{chats.length} saved</span></div>
-          <HistoryPanel chats={chats} trashed={trashed} holes={holes} showWorld onChat={onChat} onAction={onAction} />
+          <HistoryPanel chats={chats} trashed={trashed} holes={holes} showWorld onChat={onChat} onAction={onAction} onPurge={onPurge} />
         </section>
         {!holes.length && (
           <p>Your administrator hasn’t assigned any holes yet.</p>

@@ -86,3 +86,12 @@
  .visit-actions { margin-left:auto; padding:0 10px 10px; }
  .visit-actions button { min-height:36px; padding:5px 12px; }
 }
+.history-tabs { flex-wrap:wrap; }
+.history-tabs .empty-trash { margin-left:auto; color:#fac4ca; border-color:#d2839066; }
+.purge-confirmation { padding:22px; border:1px solid #d5849466; border-radius:14px; background:#b85f7612; }
+.purge-confirmation .eyebrow { color:#f4b7c4; }
+.purge-confirmation h3 { margin:12px 0; font:29px Georgia,serif; color:#f9edf4; }
+.purge-confirmation p { color:#ddc6d8; font-size:13px; line-height:1.8; overflow-wrap:anywhere; }
+.purge-buttons { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+.purge-danger { padding:12px 17px; border-radius:10px; border:1px solid #f59aaa88; background:#81344b; color:#fff1f4; font-size:13px; }
+@media(max-width:680px) { .purge-confirmation { padding:16px; } .purge-confirmation h3 { font-size:25px; } }

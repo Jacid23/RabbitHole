@@ -8,6 +8,6 @@ Image creation remains a separate, explicit action and saves creations to the im
 
 **Lock** protects a saved conversation from deletion. It remains readable and can be continued. **Unlock** allows deletion again. Locks are enforced on the server and survive reply updates.
 
-**Delete** moves an unlocked conversation into the account's recoverable **Trash**, available in entrance history and **Your visits**. **Restore** returns its messages and original hole assignment. There is no automatic purge or permanent-delete control.
+**Delete** moves an unlocked conversation into the account's recoverable **Trash**, available in entrance history and **Your visits**. **Restore** returns its messages and original hole assignment. **Delete forever** erases an individual trashed chat. **Empty Trash** erases the Trash shown in the current history view: all accessible holes at the entrance, or only the selected hole in Your visits. Both require an explicit in-app confirmation. Newly trashed conversations after confirmation was opened are excluded. This removes stored Rabbit Hole chat records; existing backups and separate image-library items are unchanged.
 
 History, locks, trash, and restoration are account-scoped and recheck current hole permissions. Temporary chats have no history entry to lock or delete.

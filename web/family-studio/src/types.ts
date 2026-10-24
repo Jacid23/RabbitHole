@@ -53,6 +53,7 @@ export type Job = {
 };
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type ChatAction = "lock" | "unlock" | "trash" | "restore";
+export type PurgeChats = (ids: string[]) => Promise<void>;
 export type ManageChat = (id: string, action: ChatAction) => Promise<void>;
 export type Conversation = {
   locked?: boolean;

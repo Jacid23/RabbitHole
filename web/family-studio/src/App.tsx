@@ -162,6 +162,10 @@ export function App() {
     }
     if (!await refresh()) throw new Error("Change saved. Reopen history to refresh the list.");
   };
+  const purgeChats = async (ids: string[]) => {
+    await api("/api/chats/trash/purge", { ids, confirmed: true });
+    if (!await refresh()) throw new Error("Conversations deleted. Refresh Rabbit Hole to reload history.");
+  };
   const holeTrash = (data?.trashed_chats || []).filter(chat => chat.workflow === hole?.id || (!chat.workflow && hole?.id === workflows[0]?.id));
   if (!data)
     return (
@@ -336,13 +340,14 @@ export function App() {
         </div>
       </div>
       {leaveAction && <LeaveTemporary onCancel={() => setLeaveAction(null)} onLeave={() => { leaveAction(); setLeaveAction(null); }} />}
-      {historyOpen && !leaveAction && hole && <VisitHistory chats={holeChats} trashed={holeTrash} onAction={manageChat} hole={hole} onChat={openChat} onClose={() => setHistoryOpen(false)} />}
+      {historyOpen && !leaveAction && hole && <VisitHistory chats={holeChats} trashed={holeTrash} onAction={manageChat} onPurge={purgeChats} hole={hole} onChat={openChat} onClose={() => setHistoryOpen(false)} />}
       {pickingHole && (
         <HolePicker
           holes={workflows}
           selected={hole?.id}
           chats={data.chats}
           trashed={data.trashed_chats || []}
+          onPurge={purgeChats}
           onAction={manageChat}
           onChat={openChat}
           onClose={() => setPickingHole(false)}

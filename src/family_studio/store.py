@@ -57,7 +57,7 @@ class Store:
         order = "updated" if kind == "chat" else "created"
         with self.lock:
             rows = self.db.execute(f"SELECT * FROM records WHERE owner=? AND kind=? ORDER BY {order} DESC, id DESC LIMIT ?",
-                                   (owner, kind, limit)).fetchall()
+                                   (owner, kind, -1 if limit is None else limit)).fetchall()
         return [self._decode(row) for row in rows]
 
     def interrupt_old_jobs(self):
@@ -100,6 +100,25 @@ class Store:
             else:
                 raise ValueError("Unknown conversation action")
         return True
+
+    def purge_chats(self, owner, ids):
+        ids = list(dict.fromkeys(ids))
+        if not ids:
+            raise ValueError("Choose conversations from Trash first.")
+        # Recheck all rows inside the mutation lock; a concurrent restore must not
+        # turn permanent deletion into deletion of a live conversation.
+        with self.lock, self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            for ident in ids:
+                row = self.db.execute("SELECT value FROM records WHERE owner=? AND id=? AND kind='trashed_chat'",
+                                      (owner, ident)).fetchone()
+                if not row:
+                    raise ValueError("Trash changed. Refresh history before deleting.")
+                if json.loads(row["value"]).get("locked"):
+                    raise ValueError("A locked conversation cannot be permanently deleted.")
+            self.db.executemany("DELETE FROM records WHERE owner=? AND id=? AND kind='trashed_chat'",
+                                [(owner, ident) for ident in ids])
+        return len(ids)
 
     def close(self):
         self.db.close()
