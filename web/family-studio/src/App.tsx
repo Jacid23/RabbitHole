@@ -3,11 +3,13 @@ import { api } from "./api";
 import { Sidebar } from "./Sidebar";
 import { ChatView } from "./ChatView";
 import { CreateView } from "./CreateView";
-import { Gallery } from "./Gallery";
+import { LibraryView } from "./LibraryView";
 import { AdminView } from "./AdminView";
 import { Signin } from "./Signin";
 import { Icon } from "./Icons";
 import { MobileNav } from "./MobileNav";
+import { LeaveTemporary } from "./LeaveTemporary";
+import { VisitHistory } from "./VisitHistory";
 import { HolePicker } from "./HolePicker";
 import { ProfileAdmin } from "./ProfileAdmin";
 import { useMobileViewport } from "./useMobileViewport";
@@ -18,6 +20,7 @@ import "./app-layout.css";
 import "./world-themes.css";
 import "./signin.css";
 import "./opening.css";
+import "./history.css";
 export function App() {
   useMobileViewport();
   const [data, setData] = useState<Bootstrap | null>(null),
@@ -27,6 +30,10 @@ export function App() {
     [model, setModel] = useState(""),
     [conversation, setConversation] = useState(""),
     [chatReset, setChatReset] = useState(0),
+    [temporary, setTemporary] = useState(false),
+    [historyOpen, setHistoryOpen] = useState(false),
+    [leaveAction, setLeaveAction] = useState<(() => void) | null>(null),
+    [lastVisits, setLastVisits] = useState<Record<string, string>>({}),
     [initialPrompt, setInitialPrompt] = useState(""),
     [initialWorkflow, setInitialWorkflow] = useState(""),
     [menu, setMenu] = useState(false),
@@ -60,7 +67,10 @@ export function App() {
   }, []);
   useEffect(() => {
     setHoleId("");
-    setPickingHole(!!data && data.workflows.length > 1);
+    setPickingHole(!!data);
+    setConversation("");
+    setTemporary(false);
+    setLastVisits({});
     const first = data?.workflows[0];
     setPage(first?.opening?.screen === "create" ? "create" : "chat");
     setInitialPrompt(first?.opening?.screen === "create" ? first.opening.image_starters?.[0]?.prompt || "" : "");
@@ -99,7 +109,7 @@ export function App() {
   const create = (prompt: string, workflow?: string) => {
     setInitialPrompt(prompt);
     setInitialWorkflow(workflow || "");
-    setPage("create");
+    changePage("create");
   };
   const images = data?.images || [],
     workflows = data?.workflows || [];
@@ -117,6 +127,33 @@ export function App() {
     (job) =>
       ["queued", "running"].includes(job.state) && job.workflow === hole?.id,
   );
+  const leaveTemporary = (action: () => void) => {
+    if (temporary) { setHistoryOpen(false); setLeaveAction(() => action); }
+    else action();
+  };
+  const newChat = (isTemporary = false) => leaveTemporary(() => {
+    setConversation(""); setTemporary(isTemporary);
+    if (hole) setLastVisits(v => ({ ...v, [hole.id]: "" }));
+    setChatReset(v => v + 1); setPage("chat");
+  });
+  const openChat = (id: string) => {
+    const chat = data?.chats.find(c => c.id === id);
+    const target = workflows.find(w => w.id === chat?.workflow) || (!chat?.workflow ? workflows[0] : undefined);
+    if (!chat || !target) return;
+    leaveTemporary(() => {
+      setHoleId(target.id); setConversation(id);
+      setLastVisits(v => ({ ...v, [target.id]: id }));
+      setTemporary(false); setChatReset(v => v + 1); setPage("chat");
+      setPickingHole(false); setHistoryOpen(false);
+    });
+  };
+  const changePage = (next: Page) => {
+    if (next !== page && page === "chat" && temporary) leaveTemporary(() => {
+      setTemporary(false); setConversation(""); setChatReset(v => v + 1); setPage(next);
+    });
+    else setPage(next);
+  };
+  const entrance = () => leaveTemporary(() => { setTemporary(false); setPickingHole(true); });
   if (!data)
     return (
       <Signin
@@ -137,16 +174,16 @@ export function App() {
       <div
         className="app-shell"
         data-theme={hole?.theme || "custom"}
-        inert={pickingHole || undefined}
+        inert={pickingHole || historyOpen || !!leaveAction || undefined}
       >
         <Sidebar
           page={page}
-          onPage={setPage}
+          onPage={changePage}
           chats={holeChats}
-          onChat={(id) => {
-            setConversation(id);
-            if (!id) setChatReset((value) => value + 1);
-          }}
+          onChat={(id) => id ? openChat(id) : newChat()}
+          onEntrance={entrance}
+          holes={workflows}
+          activeChat={conversation}
           user={data?.user}
           preview={false}
           onSignin={() => setData(null)}
@@ -171,7 +208,7 @@ export function App() {
             <button
               className="hole-switch"
               aria-label={`Change hole: ${hole?.name || "Pick a hole"}`}
-              onClick={() => setPickingHole(true)}
+              onClick={entrance}
             >
               <Icon name="key" size={16} />
               <span>{hole?.name || "Pick a hole"}</span>
@@ -180,7 +217,7 @@ export function App() {
             <a
               className="mobile-brand"
               href="#chat"
-              onClick={() => setPage("chat")}
+              onClick={() => changePage("chat")}
               aria-label="Rabbit Hole home"
             >
               <img
@@ -244,7 +281,7 @@ export function App() {
             <>
               {page === "chat" && (
                 <ChatView
-                  key={`${hole?.id}-${chatReset}`}
+                  key={`${hole?.id}-${chatReset}-${temporary}`}
                   model={hole?.chat_model || model}
                   workflow={hole?.id}
                   world={hole}
@@ -253,6 +290,10 @@ export function App() {
                   preview={false}
                   onSignin={() => setData(null)}
                   onSaved={() => void refresh()}
+                  temporary={temporary}
+                  onNewChat={newChat}
+                  onHistory={() => setHistoryOpen(true)}
+                  onConversation={(id) => { setConversation(id); void refresh(); if (hole) setLastVisits(v => ({ ...v, [hole.id]: id })); }}
                   onCreate={(prompt) => create(prompt, hole?.id)}
                 />
               )}{" "}
@@ -271,37 +312,7 @@ export function App() {
                 />
               )}{" "}
               {page === "library" && (
-                <section className="library-page">
-                  <div className="view-top">
-                    <div className="breadcrumb">
-                      Your space <span>/</span> My library
-                    </div>
-                    <span className="page-tag">
-                      <Icon name="lock" size={12} />
-                      YOUR PERSONAL COLLECTION
-                    </span>
-                  </div>
-                  <div className="library-heading">
-                    <p className="eyebrow">CURIOSITIES WORTH KEEPING</p>
-                    <h1>
-                      Your cabinet <em>of curiosities.</em>
-                    </h1>
-                    <p>The wonderful things you found along the way.</p>
-                  </div>
-                  <div
-                    className="library-results panel-scroll"
-                    role="region"
-                    aria-label="Image library"
-                    tabIndex={0}
-                  >
-                    <Gallery
-                      images={holeImages}
-                      preview={false}
-                      onChanged={() => void refresh()}
-                      onReuse={(image) => create(image.prompt, image.workflow)}
-                    />
-                  </div>
-                </section>
+                <LibraryView images={holeImages} onChanged={() => void refresh()} onCreate={create} />
               )}{" "}
               {page === "admin" && data?.user.role === "admin" && (
                 <AdminView onSaved={() => void refresh()} />
@@ -311,18 +322,23 @@ export function App() {
               )}
             </>
           </main>
-          <MobileNav page={page} onPage={setPage} />
+          <MobileNav page={page} onPage={changePage} />
         </div>
       </div>
+      {leaveAction && <LeaveTemporary onCancel={() => setLeaveAction(null)} onLeave={() => { leaveAction(); setLeaveAction(null); }} />}
+      {historyOpen && !leaveAction && hole && <VisitHistory chats={holeChats} hole={hole} onChat={openChat} onClose={() => setHistoryOpen(false)} />}
       {pickingHole && (
         <HolePicker
           holes={workflows}
           selected={hole?.id}
+          chats={data.chats}
+          onChat={openChat}
           onClose={() => setPickingHole(false)}
           onChoose={(id) => {
             const chosen = workflows.find((workflow) => workflow.id === id);
             setHoleId(id);
-            setConversation("");
+            setConversation(lastVisits[id] || "");
+            setTemporary(false);
             setChatReset((value) => value + 1);
             setInitialPrompt(chosen?.opening?.screen === "create" ? chosen.opening.image_starters?.[0]?.prompt || "" : "");
             setInitialWorkflow(id);

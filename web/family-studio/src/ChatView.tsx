@@ -14,7 +14,15 @@ export function ChatView({
   onSignin,
   onSaved,
   onCreate,
+  temporary = false,
+  onNewChat,
+  onConversation,
+  onHistory,
 }: {
+  temporary?: boolean;
+  onNewChat?: (temporary: boolean) => void;
+  onConversation?: (id: string) => void;
+  onHistory?: () => void;
   model: string;
   workflow?: string;
   world?: Workflow;
@@ -30,22 +38,28 @@ export function ChatView({
     [prompt, setPrompt] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const activeId = useRef("");
   const abort = useRef<AbortController | null>(null),
     conversationPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (conversation === activeId.current) return;
+    let cancelled = false;
     abort.current?.abort();
+    activeId.current = conversation;
     setId(conversation);
     setMessages([]);
     setError("");
     if (conversation)
       api<Conversation>("/api/chats/" + conversation)
         .then((chat) => {
+          if (cancelled) return;
           setMessages(chat.messages);
           onModel(chat.model);
         })
-        .catch((e) => setError(e.message));
-    return () => abort.current?.abort();
+        .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
   }, [conversation]);
+  useEffect(() => () => abort.current?.abort(), []);
   useEffect(() => {
     if (!messages.length) return;
     const panel = conversationPanel.current;
@@ -55,7 +69,7 @@ export function ChatView({
     });
   }, [messages, busy]);
   async function send(text = prompt) {
-    if (!text.trim()) return;
+    if (!text.trim() || busy) return;
     if (preview) {
       onSignin();
       return;
@@ -76,9 +90,14 @@ export function ChatView({
     abort.current = new AbortController();
     try {
       await streamChat(
-        { model, workflow, message: text, conversation: id || null },
+        { model, workflow, message: text, conversation: temporary ? null : id || null, temporary,
+          temporary_history: temporary ? messages.filter(m => m.content) : [] },
         (event) => {
-          if (event.type === "conversation") setId(event.id!);
+          if (event.type === "conversation") {
+            activeId.current = event.id!;
+            setId(event.id!);
+            onConversation?.(event.id!);
+          }
           if (event.type === "text")
             setMessages((v) =>
               v.map((m, i) =>
@@ -92,7 +111,7 @@ export function ChatView({
         },
         abort.current.signal,
       );
-      onSaved();
+      if (!temporary) onSaved();
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError((e as Error).message);
     } finally {
@@ -103,10 +122,22 @@ export function ChatView({
     <section className={`chat-page ${messages.length ? "has-messages" : ""}`}>
       <div className="view-top">
         <div className="breadcrumb">
-          Your space <span>/</span> Chat
+          {world?.name || "Your space"} <span>/</span> {temporary ? "Temporary chat" : "Chat"}
         </div>
-
+        <div className="chat-history-actions">
+          {onHistory && <button className="text-button" onClick={onHistory}><Icon name="chat" size={14} />Your visits</button>}
+          {onNewChat && <>
+            <button className="text-button" onClick={() => onNewChat(false)} disabled={busy}><Icon name="plus" size={14} />New chat</button>
+            <button className={`temporary-switch ${temporary ? "active" : ""}`} aria-pressed={temporary} disabled={busy}
+              onClick={() => onNewChat(!temporary)}>
+              <Icon name="lock" size={14} />{temporary ? "Temporary · leave" : "Temporary chat"}
+            </button>
+          </>}
+        </div>
       </div>
+      {temporary && <p className="temporary-notice" role="status"><Icon name="lock" size={14} />
+        Temporary chat · not saved to history. Leaving or refreshing clears it. Images you choose to create save separately.
+      </p>}
       <div ref={conversationPanel} className="chat-content panel-scroll" role="region" aria-label="Conversation" tabIndex={0}>
         {!messages.length ? (
           <WonderlandWelcome onPrompt={setPrompt} onCreate={onCreate} world={world} />
@@ -194,7 +225,7 @@ export function ChatView({
           />
           <div className="compose-actions">
             <span>
-              <Icon name="lock" size={12} />A conversation in your own space
+              <Icon name="lock" size={12} />{temporary ? "Only in this open view" : "Saved to your account"}
             </span>
             {busy ? (
               <button

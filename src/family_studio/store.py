@@ -52,8 +52,9 @@ class Store:
         return self._decode(row)
 
     def list(self, owner, kind, limit=200):
+        order = "updated" if kind == "chat" else "created"
         with self.lock:
-            rows = self.db.execute("SELECT * FROM records WHERE owner=? AND kind=? ORDER BY created DESC LIMIT ?",
+            rows = self.db.execute(f"SELECT * FROM records WHERE owner=? AND kind=? ORDER BY {order} DESC, id DESC LIMIT ?",
                                    (owner, kind, limit)).fetchall()
         return [self._decode(row) for row in rows]
 

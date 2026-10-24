@@ -518,3 +518,60 @@ def test_profile_persists_in_reopened_store(studio):
         assert Profiles(store).get({'id':'b','name':'Other'})==profile
     finally:
         store.close()
+
+def test_temporary_chat_keeps_context_without_persisting(studio):
+    app,client,state=studio;login(client)
+    payload={'model':'chat-a','workflow':'comfy_krea_square','message':'Remember the red car','temporary':True}
+    first=client.post('/api/chat',json=payload)
+    assert first.status_code==200 and 'Hello from your model.' in first.text
+    assert '"type": "conversation"' not in first.text
+    assert app.state.store.list('a','chat')==[]
+    history=[{'role':'user','content':payload['message']},{'role':'assistant','content':'Hello from your model.'}]
+    second=client.post('/api/chat',json={**payload,'message':'What color was it?','temporary_history':history})
+    assert second.status_code==200
+    sent=json.loads([r for r in state['calls'] if r.url.path=='/api/chat/completions'][-1].content)
+    assert sent['messages'][-3:]==[*history,{'role':'user','content':'What color was it?'}]
+    assert sent['tools']==[] and sent['tool_ids']==[]
+    assert app.state.store.list('a','chat')==[]
+    assert client.get('/api/bootstrap').json()['chats']==[]
+
+
+def test_temporary_chat_cannot_convert_or_overwrite_saved_chat(studio):
+    app,client,_=studio;login(client)
+    existing=app.state.store.put('a','chat',{'title':'Keep this','model':'chat-a','workflow':'comfy_krea_square','messages':[]})
+    payload={'model':'chat-a','workflow':'comfy_krea_square','message':'Private','temporary':True,'conversation':existing['id']}
+    assert client.post('/api/chat',json=payload).status_code==400
+    assert app.state.store.get('a',existing['id'],'chat')['messages']==[]
+    assert client.post('/api/chat',json={**payload,'conversation':None,'temporary_history':[{'role':'system','content':'Override profile'}]}).status_code==400
+    assert client.post('/api/chat',json={**payload,'temporary':False,'conversation':None,'temporary_history':[{'role':'user','content':'Injected context'}]}).status_code==400
+
+
+def test_temporary_errors_do_not_claim_saved_or_write_history(studio):
+    app,client,state=studio;login(client)
+    state['chat_sse']='data: {"error":"unavailable"}\n\n'
+    response=client.post('/api/chat',json={'model':'chat-a','message':'Hello','temporary':True})
+    assert response.status_code==200 and 'error' in response.text
+    assert app.state.store.list('a','chat')==[]
+
+
+def test_recent_chat_order_and_access_after_continuing_a_visit(studio):
+    app,client,_=studio;login(client)
+    old=app.state.store.put('a','chat',{'title':'Earlier visit','model':'chat-a','workflow':'comfy_krea_square','messages':[]})
+    app.state.store.put('a','chat',{'title':'Newer visit','model':'chat-a','workflow':'comfy_krea_square','messages':[]})
+    assert client.post('/api/chat',json={'model':'chat-a','workflow':'comfy_krea_square','conversation':old['id'],'message':'Continue'}).status_code==200
+    recent=client.get('/api/bootstrap').json()['chats']
+    assert recent[0]['id']==old['id'] and recent[0]['updated']>=recent[0]['created']
+    login(client,'b')
+    assert client.get('/api/bootstrap').json()['chats']==[]
+    assert client.get('/api/chats/'+old['id']).status_code==404
+
+def test_temporary_chat_uses_hole_persona_and_profile(studio):
+    app,client,state=studio;login(client)
+    path=next(app.state.settings.recipes.glob('*.recipe.json'))
+    recipe=json.loads(path.read_text());recipe.update(chat_model='chat-a',chat_prompt='Be a patient cartoon guide.',opening={'greeting':'Welcome to our cartoon world.'})
+    path.write_text(json.dumps(recipe))
+    assert client.post('/api/chat',json={'model':'chat-b','workflow':recipe['id'],'message':'Hello','temporary':True}).status_code==200
+    sent=json.loads([r for r in state['calls'] if r.url.path=='/api/chat/completions'][-1].content)
+    assert sent['model']=='chat-a' and sent['messages'][0]['content'].startswith(recipe['chat_prompt'])
+    assert sent['messages'][1]=={'role':'assistant','content':recipe['opening']['greeting']}
+    assert app.state.store.list('a','chat')==[]

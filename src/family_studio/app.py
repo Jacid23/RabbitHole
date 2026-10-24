@@ -5,6 +5,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlparse
 
 import httpx
@@ -42,11 +43,19 @@ class Generation(BaseModel):
     input_image: str | None = None
 
 
+class TemporaryMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=20000)
+
+
 class Message(BaseModel):
     model_config = ConfigDict(extra="forbid")
     model: str = Field(min_length=1, max_length=200)
     message: str = Field(min_length=1, max_length=20000)
     conversation: str | None = None
+    temporary: bool = False
+    temporary_history: list[TemporaryMessage] = Field(default_factory=list, max_length=100)
     workflow: str | None = Field(default=None, min_length=1, max_length=100)
 
 
@@ -132,7 +141,7 @@ def create_app(settings=None):
         return JSONResponse({"user": public_user, "profile": profiles.get(session.user), "models": [{"id": m["id"], "name": m.get("name") or m["id"],
             "description": (m.get("info", {}).get("meta", {}) or {}).get("description", "")} for m in models],
             "workflows": [catalog.public(r) for r in recipes.values()],
-            "chats": [{**{key: row[key] for key in ("id", "title", "model", "created")}, "workflow": row.get("workflow")} for row in permitted_records(session, "chat", recipes)], "jobs": permitted_records(session, "job", recipes),
+            "chats": [{**{key: row[key] for key in ("id", "title", "model", "created", "updated")}, "workflow": row.get("workflow")} for row in permitted_records(session, "chat", recipes)], "jobs": permitted_records(session, "job", recipes),
             "images": permitted_records(session, "image", recipes), "openwebui": settings.public_openwebui})
 
     async def health(request):

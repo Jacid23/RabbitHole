@@ -59,6 +59,7 @@ export type Conversation = {
   model: string;
   messages: ChatMessage[];
   created: number;
+  updated?: number;
 };
 export type Bootstrap = {
   user: User;

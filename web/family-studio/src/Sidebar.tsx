@@ -1,5 +1,6 @@
+import { ConversationList } from "./ConversationList";
 import { Icon, StudioMark } from "./Icons";
-import type { Conversation, Page, User } from "./types";
+import type { Conversation, Page, User, Workflow } from "./types";
 import { useDialog } from "./useDialog";
 const tabs: { page: Page; icon: string; label: string }[] = [
   { page: "chat", icon: "chat", label: "Chat" },
@@ -17,7 +18,13 @@ export function Sidebar({
   onLogout,
   open,
   onClose,
+  onEntrance,
+  holes,
+  activeChat,
 }: {
+  onEntrance: () => void;
+  holes: Workflow[];
+  activeChat: string;
   page: Page;
   onPage: (page: Page) => void;
   chats: Conversation[];
@@ -57,6 +64,7 @@ export function Sidebar({
           </span>
         </a>
         <p className="sidebar-caption">WE’RE ALL CURIOUS HERE</p>
+        <button className="nav-item" onClick={() => { onEntrance(); onClose(); }}><Icon name="key" size={17} />Back to the entrance</button>
         <button
           className="new-chat"
           onClick={() => {
@@ -86,28 +94,8 @@ export function Sidebar({
           ))}
         </nav>
         <div className="recent">
-          <div className="section-label">TRAILS YOU’VE FOLLOWED</div>
-          {chats.slice(0, 10).map((chat) => (
-            <button
-              key={chat.id}
-              onClick={() => {
-                onPage("chat");
-                onChat(chat.id);
-                onClose();
-              }}
-              title={chat.title}
-            >
-              <Icon name="chat" size={14} />
-              <span>{chat.title}</span>
-            </button>
-          ))}
-          {!chats.length && (
-            <p>
-              Your conversations will feel
-              <br />
-              right at home here.
-            </p>
-          )}
+          <div className="section-label">YOUR VISITS</div>
+          <ConversationList chats={chats} holes={holes} active={activeChat} onChat={(id) => { onChat(id); onClose(); }} />
         </div>
         <div className="sidebar-bottom">
           <div className="privacy-note">

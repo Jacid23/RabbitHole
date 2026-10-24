@@ -1,5 +1,7 @@
+import { useState } from "react";
+import { ConversationList } from "./ConversationList";
 import { useDialog } from "./useDialog";
-import type { Workflow } from "./types";
+import type { Conversation, Workflow } from "./types";
 import { Icon } from "./Icons";
 
 export function HolePicker({
@@ -7,21 +9,30 @@ export function HolePicker({
   selected,
   onChoose,
   onClose,
+  chats,
+  onChat,
 }: {
+  chats: Conversation[];
+  onChat: (id: string) => void;
   holes: Workflow[];
   selected?: string;
   onChoose: (id: string) => void;
   onClose: () => void;
 }) {
+  const [query, setQuery] = useState("");
+  const visible = chats.filter(chat => {
+    const hole = holes.find(h => h.id === chat.workflow) || (!chat.workflow ? holes[0] : undefined);
+    return hole && (chat.title + " " + hole.name).toLowerCase().includes(query.toLowerCase());
+  });
   const dialog = useDialog(true, onClose);
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <section
-        className="hole-picker"
+        className="hole-picker entrance-picker"
         ref={dialog}
         role="dialog"
         aria-modal="true"
-        aria-label="Pick a hole"
+        aria-label="Rabbit Hole entrance"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="section-heading">
@@ -37,6 +48,7 @@ export function HolePicker({
             <Icon name="close" />
           </button>
         </div>
+        <div className="entrance-scroll panel-scroll" role="region" aria-label="Holes and conversations" tabIndex={0}>
         {!!holes.length && (
           <button
             className="random-hole"
@@ -72,9 +84,15 @@ export function HolePicker({
             </button>
           ))}
         </div>
+        <section className="entrance-history" aria-label="Conversations across your holes">
+          <div className="history-heading"><div><p className="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h3>Continue your journey.</h3></div><span>{chats.length} saved</span></div>
+          <input className="history-search" aria-label="Search all conversations" placeholder="Find a conversation or a hole…" value={query} onChange={e => setQuery(e.target.value)} />
+          <ConversationList chats={visible} holes={holes} showWorld onChat={onChat} />
+        </section>
         {!holes.length && (
           <p>Your administrator hasn’t assigned any holes yet.</p>
         )}
+        </div>
       </section>
     </div>
   );

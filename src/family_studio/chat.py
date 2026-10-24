@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import uuid
 
 import httpx
 from starlette.exceptions import HTTPException
@@ -41,17 +42,27 @@ class Chat:
         owner = session.user["id"]
         if owner in self.active:
             raise HTTPException(409, "A reply is already running for this account.")
+        temporary = data.get("temporary", False)
+        history = data.get("temporary_history") or []
+        if temporary and data.get("conversation"):
+            raise HTTPException(400, "Start a new temporary chat instead of converting saved history.")
+        if history and not temporary:
+            raise HTTPException(400, "Saved conversations use account history.")
+        if sum(len(m["content"]) for m in history) > 200000:
+            raise HTTPException(400, "This temporary chat is full. Start a new chat.")
         current = self.store.get(owner, data.get("conversation"), "chat") if data.get("conversation") else None
         if data.get("conversation") and not current:
             raise HTTPException(404, "Conversation not found")
         if current and current.get("workflow") and current["workflow"] != data.get("workflow"):
             raise HTTPException(404, "This conversation belongs to another hole")
-        messages = (current or {}).get("messages", [])
+        messages = history if temporary else (current or {}).get("messages", [])
         if not messages and data.get("greeting"):
             messages = [{"role": "assistant", "content": data["greeting"]}]
         messages = [*messages, {"role": "user", "content": data["message"]}]
-        chat = self.store.put(owner, "chat", {"title": (current or {}).get("title") or data["message"][:64],
-            "model": data["model"], "workflow": data.get("workflow"), "messages": messages}, (current or {}).get("id"))
+        value = {"title": (current or {}).get("title") or data["message"][:64],
+                 "model": data["model"], "workflow": data.get("workflow"), "messages": messages}
+        chat = ({**value, "id": str(uuid.uuid4())} if temporary else
+                self.store.put(owner, "chat", value, (current or {}).get("id")))
         self.active.add(owner)
 
         async def stream():
@@ -59,7 +70,8 @@ class Chat:
             frame_count = 0
             response_frames = 0
             try:
-                yield event({"type": "conversation", "id": chat["id"]})
+                if not temporary:
+                    yield event({"type": "conversation", "id": chat["id"]})
                 context = [{"role": "system", "content": data["system_prompt"]}] if data.get("system_prompt") else []
                 payload = {"model": data["model"], "messages": [*context, *messages], "stream": True,
                     "tools": [], "tool_ids": [], "features": {"image_generation": False, "web_search": False},
@@ -129,9 +141,9 @@ class Chat:
             except asyncio.CancelledError:
                 raise
             except httpx.HTTPError:
-                yield event({"type": "error", "message": "Connection to Open WebUI was interrupted. Your conversation is saved."})
+                yield event({"type": "error", "message": "Connection to Open WebUI was interrupted. " + ("Your temporary chat remains here until you leave." if temporary else "Your conversation is saved.")})
             finally:
-                if answer:
+                if answer and not temporary:
                     self.store.put(owner, "chat", {**chat, "messages": [*messages, {"role": "assistant", "content": answer}]}, chat["id"])
                 self.active.discard(owner)
 
